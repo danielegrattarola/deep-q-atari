@@ -1,2 +1,7 @@
-# deep-q-atari
-Deep Q-learning architectures bsed on Keras and OpenAI Gym to play Atari games.
+# Deep Q Atari
+Collaboration with the machine learning team of Politecnico di Milano to apply deep Q-learning to the well known environments of the Atari games. 
+
+### Installation
+### Usage
+### About
+
