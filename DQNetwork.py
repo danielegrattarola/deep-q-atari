@@ -12,43 +12,22 @@ class DQNetwork:
 		self.learning_rate = learning_rate
 		self.dropout_prob = dropout_prob
 
-		# Define neural network
-		self.model.add(BatchNormalization(axis=1, input_shape=input_shape))
-		self.model.add(Convolution2D(32, 2, 2, border_mode='valid', subsample=(2, 2)))
+		# Deep Q Network as defined in the DeepMind paper
+		# Ordering th: (samples, channels, rows, cols)
+		self.model.add(Convolution2D(16, 8, 8, border_mode='valid', subsample=(4, 4), input_shape=input_shape))
 		self.model.add(Activation('relu'))
 
-		self.model.add(BatchNormalization(axis=1))
-		self.model.add(Convolution2D(64, 2, 2, border_mode='valid', subsample=(2, 2)))
-		self.model.add(Activation('relu'))
-
-		self.model.add(BatchNormalization(axis=1))
-		self.model.add(Convolution2D(64, 3, 3, border_mode='valid', subsample=(2, 2)))
-		self.model.add(Activation('relu'))
-
-		self.model.add(BatchNormalization(axis=1))
-		self.model.add(Convolution2D(64, 2, 2, border_mode='valid', subsample=(2, 2)))
+		self.model.add(Convolution2D(32, 4, 4, border_mode='valid', subsample=(2, 2)))
 		self.model.add(Activation('relu'))
 
 		self.model.add(Flatten())
 
-		self.model.add(BatchNormalization(mode=1))
-		self.model.add(Dropout(self.dropout_prob))
-		self.model.add(Dense(1024))
-		self.model.add(Activation('relu'))
-
-		self.model.add(BatchNormalization(mode=1))
-		self.model.add(Dropout(self.dropout_prob))
-		self.model.add(Dense(512))
-		self.model.add(Activation('relu'))
-
-		self.model.add(BatchNormalization(mode=1))
-		self.model.add(Dropout(self.dropout_prob))
 		self.model.add(Dense(256))
 		self.model.add(Activation('relu'))
 
 		self.model.add(Dense(self.actions))
 
-		self.optimizer = Adam()
+		self.optimizer = RMSprop(lr=self.learning_rate)
 		self.logger = logger
 
 		# Load the network from saved model
@@ -68,7 +47,7 @@ class DQNetwork:
 			x_train.append(datapoint['source'])
 
 			# Get the current Q-values for the next state and select the best
-			next_state_pred = list(self.predict(datapoint['dest']).squeeze())
+			next_state_pred = list(self.predict(datapoint['dest']))
 			next_a_Q_value = np.max(next_state_pred)
 
 			# Set the target so that error will be 0 on all actions except the one taken
@@ -78,7 +57,7 @@ class DQNetwork:
 
 			t_train.append(t)
 
-		print next_state_pred  # Print a prediction so to have an idea of the Q-values magnitude
+		print next_state_pred.squeeze()  # Print a prediction so to have an idea of the Q-values magnitude
 		x_train = np.asarray(x_train).squeeze()
 		t_train = np.asarray(t_train).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=32, nb_epoch=1)

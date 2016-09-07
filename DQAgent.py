@@ -12,7 +12,7 @@ class DQAgent:
 				 dropout_prob=0.1,
 				 epsilon=1,
 				 epsilon_decrease_rate=0.99,
-				 network_input_shape=(2, 84, 84),
+				 network_input_shape=(4, 84, 84),
 				 load_path='',
 				 logger=None):
 
@@ -23,7 +23,7 @@ class DQAgent:
 		self.discount_factor = discount_factor  # Discount factor
 		self.epsilon = epsilon  # Coefficient for epsilon-greedy exploration
 		self.epsilon_decrease_rate = epsilon_decrease_rate  # (inverse) Rate at which to make epsilon smaller, as training improves the agent's performance; epsilon = epsilon * rate
-		self.min_epsilon = 0.3  # Minimum epsilon value
+		self.min_epsilon = 0.1  # Minimum epsilon value
 		# Experience variables
 		self.experiences = []
 		self.training_count = 0

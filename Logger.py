@@ -36,13 +36,19 @@ class Logger:
 			print data
 
 	def to_csv(self, filename, row):
-		if self.debug: return
+		if self.debug:
+			return
 		try:
 			file = open(self.path + filename, 'a')
 		except IOError:
 			print 'Logger:to_csv IO error while opening file'
 			return
-		string = ','.join([str(val) for val in row])
+		if type(row) is list:
+			string = ','.join([str(val) for val in row])
+		elif type(row) is str:
+			string = row
+		else:
+			string = str(row) # Try to convert it anyway
 		string = string + '\n' if not string.endswith('\n') else ''
 		file.write(string)
 		file.close()
