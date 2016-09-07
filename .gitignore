@@ -1,0 +1,8 @@
+output/
+.idea/
+*png
+*pyc
+*.h5
+*.txt
+*.zip
+*.pdf
