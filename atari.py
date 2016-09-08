@@ -1,11 +1,10 @@
+import argparse
+import sys
+from PIL import Image
 import gym
 import numpy as np
-import sys
-
 from DQAgent import DQAgent
 from Logger import Logger
-import argparse
-from PIL import Image
 
 # Constants
 IMAGE_SHAPE = (110, 84)
