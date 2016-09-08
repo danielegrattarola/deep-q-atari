@@ -28,7 +28,7 @@ parser.add_argument('-l', '--load', type=str, required=False, default=None, help
 parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gym environment to use', required=False, default='MsPacman-v0')
 parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers).')
 parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
-parser.add_argument('--gamma', type=float, required=False, default=0.95, help='custom discount factor for the environment.')
+parser.add_argument('--discount-factor', type=float, required=False, default=0.95, help='custom discount factor for the environment.')
 parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the Q-network.')
 args = parser.parse_args()
 logger = Logger(debug=args.debug)
