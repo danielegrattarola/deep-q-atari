@@ -57,6 +57,8 @@ class DQAgent:
 	def add_experience(self, source, action, reward, dest, final):
 		# Add a tuple (source, action, reward, dest, final) to experiences
 		self.experiences.append({'source': source, 'action': action, 'reward': reward, 'dest': dest, 'final': final})
+		if not len(self.experiences) % 100:
+			print "Gathered %d samples of %d" % (len(self.experiences), self.batch_size)
 
 	def sample_batch(self):
 		# Pop batch_size random samples from experiences and return them as a batch 

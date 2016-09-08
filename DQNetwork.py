@@ -57,7 +57,7 @@ class DQNetwork:
 
 			t_train.append(t)
 
-		print next_state_pred.squeeze()  # Print a prediction so to have an idea of the Q-values magnitude
+		print next_state_pred  # Print a prediction so to have an idea of the Q-values magnitude
 		x_train = np.asarray(x_train).squeeze()
 		t_train = np.asarray(t_train).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=32, nb_epoch=1)

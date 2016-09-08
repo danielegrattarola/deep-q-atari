@@ -5,7 +5,7 @@ import sys
 from DQAgent import DQAgent
 from Logger import Logger
 import argparse
-from PIL import Image, ImageOps
+from PIL import Image
 
 # Constants
 IMAGE_SHAPE = (110, 84)
@@ -26,7 +26,7 @@ def get_next_state(current, obs):
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--train', action='store_true', help='train the agent.')
 parser.add_argument('-l', '--load', type=str, required=False, default=None, help='load the neural network from disk.')
-parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gym environment to use', required=False, default='Breakout-v0')
+parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gym environment to use', required=False, default='MsPacman-v0')
 parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers).')
 parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
 parser.add_argument('--gamma', type=float, required=False, default=0.95, help='custom discount factor for the environment.')
@@ -84,7 +84,7 @@ for episode in range(MAX_EPISODES):
 
 		if done:
 			must_test = False
-			logger.log("Episode finished.\nLength: %d; Score: %d" % (t + 1, score))
+			logger.log("Length: %d; Score: %d\n" % (t + 1, score))
 			if DQA.must_train():
 				DQA.train()
 				must_test = True # Test the agent's skills after every training session
