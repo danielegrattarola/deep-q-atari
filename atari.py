@@ -1,6 +1,5 @@
 import argparse
 import atexit
-import sys
 from PIL import Image
 import gym
 import numpy as np
@@ -9,13 +8,10 @@ from Logger import Logger
 
 # Constants
 IMAGE_SHAPE = (110, 84)
-MAX_EPISODES = 1000
-MAX_EPISODE_LENGTH = 10000
-MAX_TRAINING_SESSIONS = 100
 
 # Functions
 def preprocess_observation(obs):
-	image = Image.fromarray(obs, 'RGB').convert('L').resize(IMAGE_SHAPE) # Convert to greyscale and resize
+	image = Image.fromarray(obs, 'RGB').convert('L').resize(IMAGE_SHAPE) # Convert to grayscale and resize
 	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[0], image.size[1]) # Convert to array and return
 
 def get_next_state(current, obs):
@@ -27,26 +23,41 @@ def exit_handler():
 
 # I/O
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--train', action='store_true', help='train the agent.')
-parser.add_argument('-l', '--load', type=str, required=False, default=None, help='load the neural network from disk.')
-parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gym environment to use', required=False, default='MsPacman-v0')
-parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers).')
+parser.add_argument('-t', '--train', action='store_true', help='train the agent')
+parser.add_argument('-l', '--load', type=str, required=False, default=None, help='load the neural network weights from the given path')
+parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gym environment to use (default: MsPacman-v0)\n'
+														  'DeepMind paper: BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0', required=False, default='MsPacman-v0')
+parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers)')
 parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
-parser.add_argument('--discount-factor', type=float, required=False, default=0.95, help='custom discount factor for the environment.')
-parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the Q-network.')
+parser.add_argument('--batch-size', type=int, required=False, default=1024, help='custom batch size for the DQN (default: 1024)')
+parser.add_argument('--learning-rate', type=float, required=False, default=0.01, help='custom learning rate for the DQN (default: 0.01)')
+parser.add_argument('--discount-factor', type=float, required=False, default=0.99, help='custom discount factor for the environment (default: 0.99)')
+parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the DQN (default: 0.1)')
+parser.add_argument('--epsilon', type=float, required=False, default=1, help='custom random exploration rate for the agent (default: 1)')
+parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.99, help='custom rate at which to decrease epsilon (default: 0.99)')
+parser.add_argument('--max-episodes', type=int, required=False, default=1000, help='maximum number of episodes that the agent can experience before quitting (default: 1000)')
+parser.add_argument('--max-episode-length', type=int, required=False, default=10000, help='maximum number of steps in an episodes (default: 10000)')
+parser.add_argument('--max-training-sessions', type=int, required=False, default=100, help='maximum number of training sessions before quitting (default: 100)')
 args = parser.parse_args()
+
 logger = Logger(debug=args.debug)
 atexit.register(exit_handler)
 
 # Variables
 must_test = False
 
-# Entities
+# Setup
 env = gym.make(args.environment)
+network_input_shape = (4,110,84)
 DQA = DQAgent(
 	env.action_space.n,
-	network_input_shape=(4,110,84),
+	network_input_shape,
+	batch_size=args.batch_size,
+	learning_rate=args.learning_rate,
+	discount_factor=args.discount_factor,
 	dropout_prob=args.dropout,
+	epsilon=args.epsilon,
+	epsilon_decrease_rate=args.epsilon_decrease,
 	load_path=args.load,
 	logger=logger
 )
@@ -63,9 +74,9 @@ logger.to_csv(training_csv, 'length,score')
 logger.to_csv(test_csv, 'length,score')
 
 # Main loop
-for episode in range(MAX_EPISODES):
+for episode in range(args.max_episodes):
 	# Quit if we reach the maximum number of training sessions allowed
-	if DQA.training_count > MAX_TRAINING_SESSIONS:
+	if DQA.training_count > args.max_training_sessions:
 		break
 
 	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
@@ -73,7 +84,7 @@ for episode in range(MAX_EPISODES):
 	observation = preprocess_observation(env.reset())
 	current_state = np.array([observation, observation, observation, observation]) # Initialize the first state with the same 4 images
 
-	for t in range(MAX_EPISODE_LENGTH):
+	for t in range(args.max_episode_length):
 		if not args.novideo:
 			env.render()
 

@@ -5,10 +5,10 @@ import numpy as np
 
 
 class DQNetwork:
-	def __init__(self, actions, input_shape, learning_rate=0.1, gamma=0.99, dropout_prob=0.1, load_path=None, logger=None):
+	def __init__(self, actions, input_shape, learning_rate=0.01, discount_factor=0.99, dropout_prob=0.1, load_path=None, logger=None):
 		self.model = Sequential()
 		self.actions = actions  # Size of the network output
-		self.gamma = gamma
+		self.discount_factor = discount_factor
 		self.learning_rate = learning_rate
 		self.dropout_prob = dropout_prob
 
@@ -38,7 +38,7 @@ class DQNetwork:
 
 	def train(self, batch):
 		# Generate the xs and targets for the given batch, train the model on them
-		# The batch must be composed of SARS tuples in a dictionary with labels 'source', 'action', 'dest', 'reward'
+		# The batch must be composed of SARS tuples as python dictionaries with labels 'source', 'action', 'dest', 'reward'
 		x_train = []
 		t_train = []
 
@@ -52,7 +52,7 @@ class DQNetwork:
 
 			# Set the target so that error will be 0 on all actions except the one taken
 			t = list(self.predict(datapoint['source'])[0])
-			t[datapoint['action']] = (datapoint['reward'] + self.gamma * next_a_Q_value) if not datapoint['final'] else \
+			t[datapoint['action']] = (datapoint['reward'] + self.discount_factor * next_a_Q_value) if not datapoint['final'] else \
 			datapoint['reward']
 
 			t_train.append(t)
