@@ -35,9 +35,9 @@ parser.add_argument('--discount-factor', type=float, required=False, default=0.9
 parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the DQN (default: 0.1)')
 parser.add_argument('--epsilon', type=float, required=False, default=1, help='custom random exploration rate for the agent (default: 1)')
 parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.99, help='custom rate at which to decrease epsilon (default: 0.99)')
-parser.add_argument('--max-episodes', type=int, required=False, default=1000, help='maximum number of episodes that the agent can experience before quitting (default: 1000)')
+parser.add_argument('--max-episodes', type=int, required=False, default=10000, help='maximum number of episodes that the agent can experience before quitting (default: 10000)')
 parser.add_argument('--max-episode-length', type=int, required=False, default=10000, help='maximum number of steps in an episodes (default: 10000)')
-parser.add_argument('--max-training-sessions', type=int, required=False, default=100, help='maximum number of training sessions before quitting (default: 100)')
+parser.add_argument('--max-training-sessions', type=int, required=False, default=1000, help='maximum number of training sessions before quitting (default: 1000)')
 args = parser.parse_args()
 if args.debug:
 	print '####################################################' \
@@ -68,17 +68,17 @@ DQA = DQAgent(
 
 # Initial logging
 logger.log({
-	'01. Environment': args.environment,
-	'02. Action space': env.action_space.n,
-	'03. Observation space': env.observation_space.shape,
-	'04. Learning rate': args.learning_rate,
-	'05. Discount factor': args.discount_factor,
-	'06. Dropout prob': args.dropout,
-	'07. Epsilon': args.epsilon,
-	'08. Epsilon decrease rate': args.epsilon_decrease,
-	'09. Max episodes': args.max_episodes,
-	'10. Max episode length': args.max_episode_length,
-	'11. Max training sessions': args.max_training_sessions
+	'Environment': args.environment,
+	'Action space': env.action_space.n,
+	'Observation space': env.observation_space.shape,
+	'Learning rate': args.learning_rate,
+	'Discount factor': args.discount_factor,
+	'Dropout prob': args.dropout,
+	'Epsilon': args.epsilon,
+	'Epsilon decrease rate': args.epsilon_decrease,
+	'Max episodes': args.max_episodes,
+	'Max episode length': args.max_episode_length,
+	'Max training sessions': args.max_training_sessions
 })
 training_csv = 'training_info.csv'
 test_csv = 'test_info.csv'
