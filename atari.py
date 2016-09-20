@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--train', action='store_true', help='train the agent')
 parser.add_argument('-l', '--load', type=str, required=False, default=None, help='load the neural network weights from the given path')
 parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gym environment to use (default: MsPacman-v0)\n'
-														  'DeepMind paper: BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0', required=False, default='MsPacman-v0')
+														  'DeepMind paper: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0', required=False, default='MsPacman-v0')
 parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers)')
 parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
 parser.add_argument('--batch-size', type=int, required=False, default=1024, help='custom batch size for the DQN (default: 1024)')
@@ -39,6 +39,10 @@ parser.add_argument('--max-episodes', type=int, required=False, default=1000, he
 parser.add_argument('--max-episode-length', type=int, required=False, default=10000, help='maximum number of steps in an episodes (default: 10000)')
 parser.add_argument('--max-training-sessions', type=int, required=False, default=100, help='maximum number of training sessions before quitting (default: 100)')
 args = parser.parse_args()
+if args.debug:
+	print '####################################################' \
+		  'WARNING: debug flag is set, output will not be saved' \
+		  '####################################################'
 
 logger = Logger(debug=args.debug)
 atexit.register(exit_handler)
@@ -64,9 +68,17 @@ DQA = DQAgent(
 
 # Initial logging
 logger.log({
-	'Environment': args.environment,
-	'Action space': env.action_space.n,
-	'Observation space': env.observation_space.shape
+	'01. Environment': args.environment,
+	'02. Action space': env.action_space.n,
+	'03. Observation space': env.observation_space.shape,
+	'04. Learning rate': args.learning_rate,
+	'05. Discount factor': args.discount_factor,
+	'06. Dropout prob': args.dropout,
+	'07. Epsilon': args.epsilon,
+	'08. Epsilon decrease rate': args.epsilon_decrease,
+	'09. Max episodes': args.max_episodes,
+	'10. Max episode length': args.max_episode_length,
+	'11. Max training sessions': args.max_training_sessions
 })
 training_csv = 'training_info.csv'
 test_csv = 'test_info.csv'

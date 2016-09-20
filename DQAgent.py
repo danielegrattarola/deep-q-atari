@@ -39,14 +39,6 @@ class DQAgent:
 			logger=logger
 		)
 
-		if logger is not None:
-			logger.log({
-				'Discount factor': self.discount_factor,
-				'Starting epsilon': self.epsilon,
-				'Epsilon decrease rate': self.epsilon_decrease_rate,
-				'Batch size': self.batch_size
-			})
-
 	def get_action(self, state, testing=False):
 		# Poll DQN for Q-values, return argmax with probability 1-epsilon
 		q_values = self.DQN.predict(state)
