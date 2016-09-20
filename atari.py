@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import sys
 from PIL import Image
 import gym
@@ -20,6 +21,9 @@ def preprocess_observation(obs):
 def get_next_state(current, obs):
 	return np.append(current[1:], [obs], axis=0) # Next state is composed by the last 3 images of the previous state and the new observation
 
+def exit_handler():
+	global DQA
+	DQA.quit()
 
 # I/O
 parser = argparse.ArgumentParser()
@@ -32,6 +36,7 @@ parser.add_argument('--discount-factor', type=float, required=False, default=0.9
 parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the Q-network.')
 args = parser.parse_args()
 logger = Logger(debug=args.debug)
+atexit.register(exit_handler)
 
 # Variables
 must_test = False
@@ -52,18 +57,18 @@ logger.log({
 	'Action space': env.action_space.n,
 	'Observation space': env.observation_space.shape
 })
-training_csv = 'training_data.csv'
-test_csv = 'test_data.csv'
-logger.to_csv(training_csv, 'episode,length,score')
+training_csv = 'training_info.csv'
+test_csv = 'test_info.csv'
+logger.to_csv(training_csv, 'length,score')
+logger.to_csv(test_csv, 'length,score')
 
 # Main loop
 for episode in range(MAX_EPISODES):
 	# Quit if we reach the maximum number of training sessions allowed
 	if DQA.training_count > MAX_TRAINING_SESSIONS:
-		DQA.quit()
-		sys.exit(0)
+		break
 
-	logger.log("Episode %d" % episode)
+	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
 	score = 0
 	observation = preprocess_observation(env.reset())
 	current_state = np.array([observation, observation, observation, observation]) # Initialize the first state with the same 4 images
@@ -82,10 +87,13 @@ for episode in range(MAX_EPISODES):
 			DQA.add_experience(np.asarray([current_state]), action, reward, np.asarray([next_state]), done)
 
 		if done:
+			if must_test:
+				logger.to_csv(test_csv, [t, score])
+			else:
+				logger.to_csv(training_csv, [t, score])
 			must_test = False
 			logger.log("Length: %d; Score: %d\n" % (t + 1, score))
 			if DQA.must_train():
 				DQA.train()
 				must_test = True # Test the agent's skills after every training session
-			logger.to_csv(training_csv if not must_test else test_csv, [episode, t, score])
 			break

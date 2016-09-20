@@ -33,8 +33,8 @@ you'll see the options list. Possible options are:
 - **d, debug**: do not print anything to file and do not create the output folder.  
 
 ### Output
-Running the script with any combination of options will output some useful data collections to help you interpret the data.     
-You'll find the pertinent csv files in the output folder of the run (output/runYYYMMDD-hhmmss) which will contain useful raw data for the analysis of the agent's performance.
+Running the script with any combination of options (except -d) will output some data collections to help you interpret the data.
+You'll find the pertinent csv files in the output folder of the run (output/runYYYMMDD-hhmmss) which will contain raw data for the analysis of the agent's performance.
 
 
 
