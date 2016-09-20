@@ -61,7 +61,7 @@ class DQNetwork:
 		x_train = np.asarray(x_train).squeeze()
 		t_train = np.asarray(t_train).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=32, nb_epoch=1)
-		self.logger.to_csv('training_history.csv', [history.history['loss'], history.history['accuracy']])
+		self.logger.to_csv('training_history.csv', [history.history['loss'], history.history['acc']])
 
 	def predict(self, state):
 		# Feed state into the model, return predicted Q-values
