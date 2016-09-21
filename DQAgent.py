@@ -73,7 +73,7 @@ class DQAgent:
 		batch = self.sample_batch()
 		self.DQN.train(batch)  # Train the DCN
 		if update_epsilon:
-			self.epsilon = self.epsilon * self.epsilon_decrease_rate if self.epsilon > self.min_epsilon else self.min_epsilon  # Decrease the probability of picking a random action to improve exploitation
+			self.epsilon -= self.epsilon_decrease_rate  if self.epsilon > self.min_epsilon else self.min_epsilon  # Decrease the probability of picking a random action to improve exploitation
 
 	def quit(self):
 		# Save the DCN, quit

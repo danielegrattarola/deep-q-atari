@@ -34,7 +34,7 @@ parser.add_argument('--learning-rate', type=float, required=False, default=0.1, 
 parser.add_argument('--discount-factor', type=float, required=False, default=0.99, help='custom discount factor for the environment (default: 0.99)')
 parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the DQN (default: 0.1)')
 parser.add_argument('--epsilon', type=float, required=False, default=1, help='custom random exploration rate for the agent (default: 1)')
-parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.99, help='custom rate at which to decrease epsilon (default: 0.99)')
+parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.001, help='custom rate at which to linearly decrease epsilon (default: 0.001)')
 parser.add_argument('--max-episodes', type=int, required=False, default=10000, help='maximum number of episodes that the agent can experience before quitting (default: 10000)')
 parser.add_argument('--max-episode-length', type=int, required=False, default=10000, help='maximum number of steps in an episodes (default: 10000)')
 parser.add_argument('--max-training-sessions', type=int, required=False, default=1000, help='maximum number of training sessions before quitting (default: 1000)')
