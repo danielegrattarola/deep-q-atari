@@ -44,7 +44,7 @@ if args.debug:
 		  'WARNING: debug flag is set, output will not be saved' \
 		  '####################################################'
 
-logger = Logger(debug=args.debug)
+logger = Logger(debug=args.debug, append=args.environment)
 atexit.register(exit_handler)
 
 # Variables
@@ -109,7 +109,7 @@ for episode in range(args.max_episodes):
 		if not must_test:
 			DQA.add_experience(np.asarray([current_state]), action, reward, np.asarray([next_state]), done)
 
-		if done:
+		if done or t == args.max_episode_length - 1:
 			if must_test:
 				logger.to_csv(test_csv, [t, score])
 			else:

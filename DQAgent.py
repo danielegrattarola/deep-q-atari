@@ -23,6 +23,7 @@ class DQAgent:
 		self.epsilon = epsilon  # Coefficient for epsilon-greedy exploration
 		self.epsilon_decrease_rate = epsilon_decrease_rate  # (inverse) Rate at which to make epsilon smaller, as training improves the agent's performance; epsilon = epsilon * rate
 		self.min_epsilon = 0.1  # Minimum epsilon value
+		self.logger = logger
 
 		# Experience replay variables
 		self.experiences = []
@@ -67,7 +68,8 @@ class DQAgent:
 	def train(self, update_epsilon=True):
 		# Sample a batch from experiences, train the DCN on it, update the epsilon-greedy coefficient
 		self.training_count += 1
-		print 'Training session #', self.training_count, ' - epsilon:', self.epsilon
+		if self.logger is not None:
+			self.logger.log('Training session #%d - epsilon: %f' %(self.training_count, self.epsilon))
 		batch = self.sample_batch()
 		self.DQN.train(batch)  # Train the DCN
 		if update_epsilon:
