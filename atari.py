@@ -37,7 +37,7 @@ parser.add_argument('--epsilon', type=float, required=False, default=1, help='cu
 parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.001, help='custom rate at which to linearly decrease epsilon (default: 0.001)')
 parser.add_argument('--max-episodes', type=int, required=False, default=10000, help='maximum number of episodes that the agent can experience before quitting (default: 10000)')
 parser.add_argument('--max-episode-length', type=int, required=False, default=10000, help='maximum number of steps in an episodes (default: 10000)')
-parser.add_argument('--max-training-sessions', type=int, required=False, default=1000, help='maximum number of training sessions before quitting (default: 1000)')
+parser.add_argument('--max-training-sessions', type=int, required=False, default=100, help='maximum number of training sessions before quitting (default: 1000)')
 args = parser.parse_args()
 if args.debug:
 	print '####################################################' \
@@ -52,7 +52,7 @@ must_test = False
 
 # Setup
 env = gym.make(args.environment)
-network_input_shape = (4,110,84)
+network_input_shape = (4,110,84) # Dimension ordering: 'th'
 DQA = DQAgent(
 	env.action_space.n,
 	network_input_shape,
