@@ -30,7 +30,7 @@ parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gy
 parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers)')
 parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
 parser.add_argument('--batch-size', type=int, required=False, default=1024, help='custom batch size for the DQN (default: 1024)')
-parser.add_argument('--learning-rate', type=float, required=False, default=0.1, help='custom learning rate for the DQN (default: 0.1)')
+parser.add_argument('--learning-rate', type=float, required=False, default=0.01, help='custom learning rate for the DQN (default: 0.1)')
 parser.add_argument('--discount-factor', type=float, required=False, default=0.99, help='custom discount factor for the environment (default: 0.99)')
 parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the DQN (default: 0.1)')
 parser.add_argument('--epsilon', type=float, required=False, default=1, help='custom random exploration rate for the agent (default: 1)')
@@ -107,7 +107,8 @@ for episode in range(args.max_episodes):
 		next_state = get_next_state(current_state, observation)
 
 		if not must_test:
-			DQA.add_experience(np.asarray([current_state]), action, reward, np.asarray([next_state]), done)
+			clipped_reward = 1 if reward > 0 else (-1 if reward < 0 else 0) # Clip the reward like in the Deepmind paper
+			DQA.add_experience(np.asarray([current_state]), action, clipped_reward, np.asarray([next_state]), done)
 
 		if done or t == args.max_episode_length - 1:
 			if must_test:

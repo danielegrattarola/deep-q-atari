@@ -14,15 +14,18 @@ class DQNetwork:
 
 		# Deep Q Network as defined in the DeepMind paper
 		# Ordering th: (samples, channels, rows, cols)
-		self.model.add(Convolution2D(16, 8, 8, border_mode='valid', subsample=(4, 4), input_shape=input_shape, dim_ordering='th'))
+		self.model.add(Convolution2D(32, 8, 8, border_mode='valid', subsample=(4, 4), input_shape=input_shape, dim_ordering='th'))
 		self.model.add(Activation('relu'))
 
-		self.model.add(Convolution2D(32, 4, 4, border_mode='valid', subsample=(2, 2), dim_ordering='th'))
+		self.model.add(Convolution2D(64, 4, 4, border_mode='valid', subsample=(2, 2), dim_ordering='th'))
+		self.model.add(Activation('relu'))
+
+		self.model.add(Convolution2D(64, 1, 1, border_mode='valid', subsample=(1, 1), dim_ordering='th'))
 		self.model.add(Activation('relu'))
 
 		self.model.add(Flatten())
 
-		self.model.add(Dense(256))
+		self.model.add(Dense(512))
 		self.model.add(Activation('relu'))
 
 		self.model.add(Dense(self.actions))
