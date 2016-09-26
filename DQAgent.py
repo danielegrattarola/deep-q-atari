@@ -1,6 +1,7 @@
 from DQNetwork import DQNetwork
 import random
 import numpy as np
+from copy import deepcopy
 
 
 class DQAgent:
@@ -46,6 +47,17 @@ class DQAgent:
 			load_path=self.load_path,
 			logger=self.logger
 		)
+		self.DQN_target = DQNetwork(
+			self.actions,
+			self.network_input_shape,
+			learning_rate=self.learning_rate,
+			discount_factor=self.discount_factor,
+			minibatch_size=self.minibatch_size,
+			dropout_prob=self.dropout_prob,
+			load_path=self.load_path,
+			logger=self.logger
+		)
+		self.DQN_target.model.set_weights(self.DQN.model.get_weights())
 
 	def get_action(self, state, testing=False, force_random=False):
 		# Poll DQN for Q-values, return argmax with probability 1-epsilon
@@ -80,21 +92,13 @@ class DQAgent:
 		if self.logger is not None:
 			self.logger.log('Training session #%d - epsilon: %f' %(self.training_count, self.epsilon))
 		batch = self.sample_batch()
-		self.DQN.train(batch)  # Train the DCN
+		self.DQN.train(batch, self.DQN_target)  # Train the DCN
 		if update_epsilon:
 			self.epsilon -= self.epsilon_decrease_rate  if self.epsilon > self.min_epsilon else self.min_epsilon  # Decrease the probability of picking a random action to improve exploitation
 
-	def reset(self):
-		self.DQN = DQNetwork(
-			self.actions,
-			self.network_input_shape,
-			learning_rate=self.learning_rate,
-			discount_factor=self.discount_factor,
-			minibatch_size=self.minibatch_size,
-			dropout_prob=self.dropout_prob,
-			load_path=self.load_path,
-			logger=self.logger
-		)
+	def reset_target_network(self):
+		self.DQN_target.model.set_weights(self.DQN.model.get_weights())
+
 
 	def quit(self):
 		# Save the DCN, quit

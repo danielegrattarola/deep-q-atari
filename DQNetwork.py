@@ -40,7 +40,7 @@ class DQNetwork:
 
 		self.model.compile(loss='mean_squared_error', optimizer=self.optimizer, metrics=['accuracy'])
 
-	def train(self, batch):
+	def train(self, batch, DQN_target):
 		# Generate the xs and targets for the given batch, train the model on them
 		# The batch must be composed of SARS tuples as python dictionaries with labels 'source', 'action', 'dest', 'reward'
 		x_train = []
@@ -51,7 +51,7 @@ class DQNetwork:
 			x_train.append(datapoint['source'])
 
 			# Get the current Q-values for the next state and select the best
-			next_state_pred = list(self.predict(datapoint['dest']))
+			next_state_pred = list(DQN_target.predict(datapoint['dest']))
 			next_a_Q_value = np.max(next_state_pred)
 
 			# Set the target so that error will be 0 on all actions except the one taken
