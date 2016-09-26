@@ -98,7 +98,7 @@ for episode in range(args.max_episodes):
 	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
 	score = 0
 	remaining_random_actions = args.initial_random_actions
-	observation = preprocess_observation(env.reset_target_network())
+	observation = preprocess_observation(env.reset())
 	current_state = np.array([observation, observation, observation, observation]) # Initialize the first state with the same 4 images
 
 	for t in range(args.max_episode_length):
