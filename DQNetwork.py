@@ -20,7 +20,7 @@ class DQNetwork:
 		self.model.add(Convolution2D(64, 4, 4, border_mode='valid', subsample=(2, 2), dim_ordering='th'))
 		self.model.add(Activation('relu'))
 
-		self.model.add(Convolution2D(64, 1, 1, border_mode='valid', subsample=(1, 1), dim_ordering='th'))
+		self.model.add(Convolution2D(64, 3, 3, border_mode='valid', subsample=(1, 1), dim_ordering='th'))
 		self.model.add(Activation('relu'))
 
 		self.model.add(Flatten())
@@ -64,7 +64,7 @@ class DQNetwork:
 		x_train = np.asarray(x_train).squeeze()
 		t_train = np.asarray(t_train).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=32, nb_epoch=1)
-		self.logger.to_csv('training_history.csv', [history.history['loss'], history.history['acc']])
+		self.logger.to_csv('training_history.csv', [history.history['loss'][0], history.history['acc'][0]])
 
 	def predict(self, state):
 		# Feed state into the model, return predicted Q-values
