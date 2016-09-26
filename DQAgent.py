@@ -1,7 +1,6 @@
 from DQNetwork import DQNetwork
 import random
 import numpy as np
-from copy import deepcopy
 
 
 class DQAgent:
@@ -15,28 +14,30 @@ class DQAgent:
 				 dropout_prob=0.1,
 				 epsilon=1,
 				 epsilon_decrease_rate=0.99,
+				 min_epsilon=0.1,
 				 load_path=None,
 				 logger=None):
 
 		# Parameters
 		self.network_input_shape = network_input_shape
-		self.actions = actions  # Size of the discreet action space
+		self.actions = actions
 		self.learning_rate = learning_rate
 		self.dropout_prob = dropout_prob
 		self.load_path = load_path
 		self.replay_memory_size = replay_memory_size
 		self.minibatch_size = minibatch_size
-		self.discount_factor = discount_factor  # Discount factor
-		self.epsilon = epsilon  # Coefficient for epsilon-greedy exploration
-		self.epsilon_decrease_rate = epsilon_decrease_rate  # (inverse) Rate at which to make epsilon smaller, as training improves the agent's performance; epsilon = epsilon * rate
-		self.min_epsilon = 0.1  # Minimum epsilon value
+		self.discount_factor = discount_factor
+		self.epsilon = epsilon
+		self.epsilon_decrease_rate = epsilon_decrease_rate
+		self.min_epsilon = min_epsilon  # Minimum epsilon value
 		self.logger = logger
 
-		# Experience replay variables
+		# Replay memory
 		self.experiences = []
 		self.training_count = 0
 
-		# Instantiate the deep Q-network
+		# Instantiate the deep Q-networks
+		# Main DQN
 		self.DQN = DQNetwork(
 			self.actions,
 			self.network_input_shape,
@@ -47,6 +48,7 @@ class DQAgent:
 			load_path=self.load_path,
 			logger=self.logger
 		)
+		# Target DQN used to generate targets
 		self.DQN_target = DQNetwork(
 			self.actions,
 			self.network_input_shape,
@@ -57,10 +59,12 @@ class DQAgent:
 			load_path=self.load_path,
 			logger=self.logger
 		)
+		# Reset target DQN
 		self.DQN_target.model.set_weights(self.DQN.model.get_weights())
 
 	def get_action(self, state, testing=False, force_random=False):
-		# Poll DQN for Q-values, return argmax with probability 1-epsilon
+		# Poll DQN for Q-values
+		# Return argmax with probability 1-epsilon during training, 0.05 during testing
 		if force_random or (random.random() < self.epsilon if not testing else 0.05):
 			return random.randint(0, self.actions - 1)
 		else:
@@ -68,36 +72,40 @@ class DQAgent:
 			return np.argmax(q_values)
 
 	def add_experience(self, source, action, reward, dest, final):
-		# Add a tuple (source, action, reward, dest, final) to experiences
+		# Remove older transitions if the replay memory is full
+		if len(self.experiences) >= self.replay_memory_size:
+			self.experiences.pop()
+		# Add a tuple (source, action, reward, dest, final) to replay memory
 		self.experiences.append({'source': source, 'action': action, 'reward': reward, 'dest': dest, 'final': final})
-		if not len(self.experiences) % 100:
+		# Periodically log how many samples we've gathered so far
+		if not len(self.experiences) % 100 and len(self.experiences) < self.replay_memory_size:
 			print "Gathered %d samples of %d" % (len(self.experiences), self.replay_memory_size)
 
 	def sample_batch(self):
-		# Pop batch_size random samples from experiences and return them as a batch 
+		# Sample minibatch_size random transitions from experiences and return them as a batch
 		batch = []
 		for i in range(self.minibatch_size):
-			batch.append(self.experiences.pop(random.randrange(0, len(self.experiences))))
+			batch.append(self.experiences[random.randrange(0, len(self.experiences))])
 		return np.asarray(batch)
 
-	def must_train(self):
-		# Returns true if the number of samples in experiences is greater than the batch size
-		return len(self.experiences) >= self.replay_memory_size
-
-	def train(self, update_epsilon=True):
-		# Sample a batch from experiences, train the DCN on it, update the epsilon-greedy coefficient
+	def train(self):
+		# Sample a batch from experiences and train the DCN on it
 		self.training_count += 1
-		if self.logger is not None:
-			self.logger.log('Training session #%d - epsilon: %f' %(self.training_count, self.epsilon))
+		print 'Training session #%d - epsilon: %f' % (self.training_count, self.epsilon)
 		batch = self.sample_batch()
-		self.DQN.train(batch, self.DQN_target)  # Train the DCN
-		if update_epsilon:
-			self.epsilon -= self.epsilon_decrease_rate  if self.epsilon > self.min_epsilon else self.min_epsilon  # Decrease the probability of picking a random action to improve exploitation
+		self.DQN.train(batch, self.DQN_target)  # Train the DQN
+
+	def update_epsilon(self):
+		# Decrease the probability of picking a random action to improve exploitation
+		self.epsilon -= self.epsilon_decrease_rate if self.epsilon > self.min_epsilon else self.min_epsilon
 
 	def reset_target_network(self):
+		# Update the target DQN with the current weights of the main DQN
+		if self.logger is not None:
+			self.logger.log('Updating target network...')
 		self.DQN_target.model.set_weights(self.DQN.model.get_weights())
 
-
 	def quit(self):
-		# Save the DCN, quit
-		self.DQN.save()
+		# Save the DQN, quit
+		self.DQN.save(append='_DQN')
+		self.DQN_target.save(append='_DQN_target')

@@ -12,29 +12,36 @@ class DQNetwork:
 		self.minibatch_size = minibatch_size
 		self.learning_rate = learning_rate
 		self.dropout_prob = dropout_prob
+		self.logger = logger
 
-		# Deep Q Network as defined in the DeepMind paper
+		# Deep Q Network as defined in the DeepMind article on Nature
 		# Ordering th: (samples, channels, rows, cols)
+
+		# First convolutional layer
 		self.model.add(Convolution2D(32, 8, 8, border_mode='valid', subsample=(4, 4), input_shape=input_shape, dim_ordering='th'))
 		self.model.add(Activation('relu'))
 
+		# Second convolutional layer
 		self.model.add(Convolution2D(64, 4, 4, border_mode='valid', subsample=(2, 2), dim_ordering='th'))
 		self.model.add(Activation('relu'))
 
+		# Third convolutional layer
 		self.model.add(Convolution2D(64, 3, 3, border_mode='valid', subsample=(1, 1), dim_ordering='th'))
 		self.model.add(Activation('relu'))
 
 		self.model.add(Flatten())
 
+		# First dense layer
 		self.model.add(Dense(512))
 		self.model.add(Activation('relu'))
 
+		# Output layer
 		self.model.add(Dense(self.actions))
 
-		self.optimizer = RMSprop(lr=self.learning_rate, epsilon=1e-02, rho=0.95)
-		self.logger = logger
+		# Optimization algorithm
+		self.optimizer = RMSprop(lr=self.learning_rate, epsilon=1e-02, rho=0.9)
 
-		# Load the network from saved model
+		# Load the network weights from saved model
 		if load_path is not None:
 			self.load(load_path)
 
@@ -50,31 +57,31 @@ class DQNetwork:
 		for datapoint in batch:
 			x_train.append(datapoint['source'])
 
-			# Get the current Q-values for the next state and select the best
+			# Get the Q-values for the next state from the target DQN and select the best of them
 			next_state_pred = list(DQN_target.predict(datapoint['dest']))
-			next_a_Q_value = np.max(next_state_pred)
+			next_Q_value = np.max(next_state_pred)
 
 			# Set the target so that error will be 0 on all actions except the one taken
 			t = list(self.predict(datapoint['source'])[0])
-			t[datapoint['action']] = (datapoint['reward'] + self.discount_factor * next_a_Q_value) if not datapoint['final'] else \
+			t[datapoint['action']] = (datapoint['reward'] + self.discount_factor * next_Q_value) if not datapoint['final'] else \
 			datapoint['reward']
 
 			t_train.append(t)
 
-		print next_state_pred  # Print a prediction so to have an idea of the Q-values magnitude
+		# print next_state_pred  # Print a prediction so to have an idea of the Q-values magnitude
 		x_train = np.asarray(x_train).squeeze()
 		t_train = np.asarray(t_train).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=self.minibatch_size, nb_epoch=1)
 		self.logger.to_csv('training_history.csv', [history.history['loss'][0], history.history['acc'][0]])
 
 	def predict(self, state):
-		# Feed state into the model, return predicted Q-values
+		# Feed state into the DQN, return predicted Q-values
 		return self.model.predict(state, batch_size=1)
 
-	def save(self, filename=None):
-		# Save the model and its weights to disk
+	def save(self, filename=None, append=''):
+		# Save the DQN weights to disk
 		print 'Saving...'
-		self.model.save_weights(self.logger.path + ('model.h5' if filename is None else filename))
+		self.model.save_weights(self.logger.path + ('model%s.h5' % append if filename is None else filename))
 
 	def load(self, path):
 		# Load the model and its weights from path
