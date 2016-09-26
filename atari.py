@@ -33,7 +33,7 @@ parser.add_argument('-e', '--environment', type=str,
 						 'DeepMind paper: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0',
 					default='MsPacman-v0')
 parser.add_argument('--minibatch-size', type=int, default=32, help='number of transitions to train the DQN on')
-parser.add_argument('--replay-memory-size', type=int, default=1000000, help='number of samples stored in the replay memory')
+parser.add_argument('--replay-memory-size', type=int, default=100000, help='number of samples stored in the replay memory')
 parser.add_argument('--target-network-update-freq', type=int, default=10000, help='frequency (number of DQN updates) with which the target DQN is updated')
 parser.add_argument('--discount-factor', type=float, default=0.99, help='discount factor for the environment')
 parser.add_argument('--update-freq', type=int, default=4, help='frequency (number of steps) with which to train the DQN')
@@ -44,7 +44,7 @@ parser.add_argument('--learning-rate', type=float, default=0.00025, help='learni
 parser.add_argument('--epsilon', type=float, default=1, help='initial exploration rate for the agent')
 parser.add_argument('--min-epsilon', type=float, default=0.1, help='final exploration rate for the agent')
 parser.add_argument('--epsilon-decrease', type=float, default=0.0000009, help='rate at which to linearly decrease epsilon')
-parser.add_argument('--replay-start-size', type=int, default=50000, help='minimum number of transitions (with fully random policy) to store in the replay memory before starting training')
+parser.add_argument('--replay-start-size', type=int, default=5000, help='minimum number of transitions (with fully random policy) to store in the replay memory before starting training')
 parser.add_argument('--initial-random-actions', type=int, default=30, help='number of random actions to be performed by the agent at the beginning of each episode')
 
 parser.add_argument('--dropout', type=float, default=0.1, help='dropout rate for the DQN')
