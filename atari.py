@@ -41,7 +41,6 @@ parser.add_argument('--epsilon', type=float, required=False, default=1, help='cu
 parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.0000009, help='custom rate at which to linearly decrease epsilon (default: 0.001)')
 parser.add_argument('--max-episodes', type=int, required=False, default=10000, help='maximum number of episodes that the agent can experience before quitting (default: 10000)')
 parser.add_argument('--max-episode-length', type=int, required=False, default=10000, help='maximum number of steps in an episodes (default: 10000)')
-parser.add_argument('--max-training-sessions', type=int, required=False, default=100, help='maximum number of training sessions before quitting (default: 1000)')
 parser.add_argument('--initial-random-actions', type=int, required=False, default=30, help='')
 
 parser.add_argument('--target-network-update-freq', type=int, required=False, default=10000, help='')
@@ -86,8 +85,7 @@ logger.log({
 	'Epsilon': args.epsilon,
 	'Epsilon decrease rate': args.epsilon_decrease,
 	'Max episodes': args.max_episodes,
-	'Max episode length': args.max_episode_length,
-	'Max training sessions': args.max_training_sessions
+	'Max episode length': args.max_episode_length
 })
 training_csv = 'training_info.csv'
 test_csv = 'test_info.csv'
@@ -96,9 +94,6 @@ logger.to_csv(test_csv, 'length,score')
 
 # Main loop
 for episode in range(args.max_episodes):
-	# Quit if we reach the maximum number of training sessions allowed
-	if DQA.training_count > args.max_training_sessions:
-		break
 
 	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
 	score = 0
