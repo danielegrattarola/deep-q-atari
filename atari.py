@@ -30,7 +30,7 @@ parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gy
 parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers)')
 parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
 
-parser.add_argument('--replay-memory-size', type=int, required=False, default=1048576, help='')
+parser.add_argument('--replay-memory-size', type=int, required=False, default=1000000, help='')
 parser.add_argument('--replay-start-size', type=int, required=False, default=50000, help='')
 parser.add_argument('--minibatch-size', type=int, required=False, default=32, help='')
 
@@ -138,5 +138,6 @@ for episode in range(args.max_episodes):
 				logger.to_csv(training_csv, [t, score])
 			logger.log("Length: %d; Score: %d\n" % (t + 1, score))
 			must_test = (episode % args.test_freq == 0)
+			break
 
 

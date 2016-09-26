@@ -62,11 +62,9 @@ class DQAgent:
 	def get_action(self, state, testing=False, force_random=False):
 		# Poll DQN for Q-values, return argmax with probability 1-epsilon
 		if force_random or (random.random() < self.epsilon if not testing else 0.05):
-			print 'Random action...'
 			return random.randint(0, self.actions - 1)
 		else:
 			q_values = self.DQN.predict(state)
-			print 'DQN action...'
 			return np.argmax(q_values)
 
 	def add_experience(self, source, action, reward, dest, final):
