@@ -5,10 +5,11 @@ import numpy as np
 
 
 class DQNetwork:
-	def __init__(self, actions, input_shape, learning_rate=0.01, discount_factor=0.99, dropout_prob=0.1, load_path=None, logger=None):
+	def __init__(self, actions, input_shape, minibatch_size=32, learning_rate=0.01, discount_factor=0.99, dropout_prob=0.1, load_path=None, logger=None):
 		self.model = Sequential()
 		self.actions = actions  # Size of the network output
 		self.discount_factor = discount_factor
+		self.minibatch_size = minibatch_size
 		self.learning_rate = learning_rate
 		self.dropout_prob = dropout_prob
 
@@ -30,7 +31,7 @@ class DQNetwork:
 
 		self.model.add(Dense(self.actions))
 
-		self.optimizer = RMSprop(lr=self.learning_rate)
+		self.optimizer = RMSprop(lr=self.learning_rate, epsilon=1e-02, rho=0.95)
 		self.logger = logger
 
 		# Load the network from saved model
@@ -63,7 +64,7 @@ class DQNetwork:
 		print next_state_pred  # Print a prediction so to have an idea of the Q-values magnitude
 		x_train = np.asarray(x_train).squeeze()
 		t_train = np.asarray(t_train).squeeze()
-		history = self.model.fit(x_train, t_train, batch_size=32, nb_epoch=1)
+		history = self.model.fit(x_train, t_train, batch_size=self.minibatch_size, nb_epoch=1)
 		self.logger.to_csv('training_history.csv', [history.history['loss'][0], history.history['acc'][0]])
 
 	def predict(self, state):

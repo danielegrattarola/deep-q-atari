@@ -29,15 +29,19 @@ parser.add_argument('-e', '--environment', type=str, help='Name of the OpenAI Gy
 														  'DeepMind paper: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0', required=False, default='MsPacman-v0')
 parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers)')
 parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
-parser.add_argument('--batch-size', type=int, required=False, default=1024, help='custom batch size for the DQN (default: 1024)')
-parser.add_argument('--learning-rate', type=float, required=False, default=0.01, help='custom learning rate for the DQN (default: 0.01)')
+parser.add_argument('--replay-memory-size', type=int, required=False, default=1000000, help='')
+parser.add_argument('--minibatch-size', type=int, required=False, default=32, help='')
+parser.add_argument('--replay-start-size', type=int, required=False, default=50000, help='')
+parser.add_argument('--learning-rate', type=float, required=False, default=0.00025, help='custom learning rate for the DQN (default: 0.00025)')
 parser.add_argument('--discount-factor', type=float, required=False, default=0.99, help='custom discount factor for the environment (default: 0.99)')
 parser.add_argument('--dropout', type=float, required=False, default=0.1, help='custom dropout rate for the DQN (default: 0.1)')
 parser.add_argument('--epsilon', type=float, required=False, default=1, help='custom random exploration rate for the agent (default: 1)')
-parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.001, help='custom rate at which to linearly decrease epsilon (default: 0.001)')
+parser.add_argument('--epsilon-decrease', type=float, required=False, default=0.0000009, help='custom rate at which to linearly decrease epsilon (default: 0.001)')
 parser.add_argument('--max-episodes', type=int, required=False, default=10000, help='maximum number of episodes that the agent can experience before quitting (default: 10000)')
 parser.add_argument('--max-episode-length', type=int, required=False, default=10000, help='maximum number of steps in an episodes (default: 10000)')
 parser.add_argument('--max-training-sessions', type=int, required=False, default=100, help='maximum number of training sessions before quitting (default: 1000)')
+parser.add_argument('--initial-random-actions', type=int, required=False, default=30, help='maximum number of training sessions before quitting (default: 1000)')
+parser.add_argument('--target-network-update-freq', type=int, required=False, default=10000, help='')
 args = parser.parse_args()
 if args.debug:
 	print '####################################################' \
@@ -56,7 +60,7 @@ network_input_shape = (4,110,84) # Dimension ordering: 'th'
 DQA = DQAgent(
 	env.action_space.n,
 	network_input_shape,
-	batch_size=args.batch_size,
+	replay_memory_size=args.replay_memory_size,
 	learning_rate=args.learning_rate,
 	discount_factor=args.discount_factor,
 	dropout_prob=args.dropout,
@@ -93,6 +97,7 @@ for episode in range(args.max_episodes):
 
 	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
 	score = 0
+	remaining_random_actions = args.initial_random_actions
 	observation = preprocess_observation(env.reset())
 	current_state = np.array([observation, observation, observation, observation]) # Initialize the first state with the same 4 images
 
@@ -100,7 +105,9 @@ for episode in range(args.max_episodes):
 		if not args.novideo:
 			env.render()
 
-		action = DQA.get_action(np.asarray([current_state]), testing=must_test)
+		remaining_random_actions -= 1
+
+		action = DQA.get_action(np.asarray([current_state]), testing=must_test, force_random=(remaining_random_actions >= 0))
 		observation, reward, done, info = env.step(action)
 		observation = preprocess_observation(observation)
 		score += reward
@@ -110,14 +117,17 @@ for episode in range(args.max_episodes):
 			clipped_reward = 1 if reward > 0 else (-1 if reward < 0 else 0) # Clip the reward like in the Deepmind paper
 			DQA.add_experience(np.asarray([current_state]), action, clipped_reward, np.asarray([next_state]), done)
 
-		if done or t == args.max_episode_length - 1:
+		if DQA.training_count >= args.target_network_update_freq:
+			DQA.reset()
+
+		if done:
 			if must_test:
 				logger.to_csv(test_csv, [t, score])
 			else:
 				logger.to_csv(training_csv, [t, score])
 			must_test = False
 			logger.log("Length: %d; Score: %d\n" % (t + 1, score))
-			if DQA.must_train():
-				DQA.train()
-				must_test = True # Test the agent's skills after every training session
-			break
+
+		if (t % 4 == 0 and len(DQA.experiences) >= args.replay_start_size) or t == args.max_episode_length - 1:
+			DQA.train()
+			must_test = True # Test the agent's skills after every training session
