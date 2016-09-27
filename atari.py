@@ -8,12 +8,12 @@ from Logger import Logger
 
 
 # Constants
-IMAGE_SHAPE = (110, 84)
+IMAGE_SHAPE = (84, 110) # Changed already
 
 # Functions
 def preprocess_observation(obs):
 	image = Image.fromarray(obs, 'RGB').convert('L').resize(IMAGE_SHAPE) # Convert to grayscale and resize
-	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[0], image.size[1]) # Convert to array and return
+	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1], image.size[0]) # Convert to array and return
 
 def get_next_state(current, obs):
 	return np.append(current[1:], [obs], axis=0) # Next state is composed by the last 3 images of the previous state and the new observation
@@ -133,6 +133,9 @@ for episode in range(args.max_episodes):
 			# Linear epsilon annealing
 			if len(DQA.experiences) >= args.replay_start_size:
 				DQA.update_epsilon()
+
+		# After transition switch state
+		current_state = next_state
 
 		# Logging
 		score += reward # Keep track of score
