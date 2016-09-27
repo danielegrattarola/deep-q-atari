@@ -65,7 +65,7 @@ class DQAgent:
 	def get_action(self, state, testing=False, force_random=False):
 		# Poll DQN for Q-values
 		# Return argmax with probability 1-epsilon during training, 0.05 during testing
-		if force_random or (random.random() < self.epsilon if not testing else 0.05):
+		if force_random or (random.random() < (self.epsilon if not testing else 0.05)):
 			return random.randint(0, self.actions - 1)
 		else:
 			q_values = self.DQN.predict(state)
