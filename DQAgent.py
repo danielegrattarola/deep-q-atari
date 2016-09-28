@@ -71,6 +71,14 @@ class DQAgent:
 			q_values = self.DQN.predict(state)
 			return np.argmax(q_values)
 
+	def get_max_q(self, state):
+		# Returns the maximum Q value predicted on the given state
+		q_values = self.DQN.predict(state)
+		return np.max(q_values)
+
+	def get_random_state(self):
+		return self.experiences.pop(random.randrange(0, len(self.experiences)))['source']
+
 	def add_experience(self, source, action, reward, dest, final):
 		# Remove older transitions if the replay memory is full
 		if len(self.experiences) >= self.replay_memory_size:
