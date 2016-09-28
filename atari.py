@@ -8,15 +8,18 @@ from Logger import Logger
 
 
 # Constants
-IMAGE_SHAPE = (84, 110) # Changed already
+IMAGE_SHAPE = (84, 110)  # PIL wants the shape as columns by rows
 
 # Functions
 def preprocess_observation(obs):
-	image = Image.fromarray(obs, 'RGB').convert('L').resize(IMAGE_SHAPE) # Convert to grayscale and resize
-	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1], image.size[0]) # Convert to array and return
+	image = Image.fromarray(obs, 'RGB').convert('L').resize(IMAGE_SHAPE)  # Convert to gray-scale and resize
+	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1], image.size[0])  # Convert to array and return
+
 
 def get_next_state(current, obs):
-	return np.append(current[1:], [obs], axis=0) # Next state is composed by the last 3 images of the previous state and the new observation
+	# Next state is composed by the last 3 images of the previous state and the new observation
+	return np.append(current[1:], [obs], axis=0)
+
 
 def exit_handler():
 	global DQA
@@ -54,19 +57,19 @@ parser.add_argument('--test-freq', type=int, default=10, help='frequency (number
 
 args = parser.parse_args()
 if args.debug:
-	print '####################################################' \
-		  'WARNING: debug flag is set, output will not be saved' \
+	print '####################################################'\
+		  'WARNING: debug flag is set, output will not be saved'\
 		  '####################################################'
 
 logger = Logger(debug=args.debug, append=args.environment)
-atexit.register(exit_handler) # Make sure to always save the model when exiting
+atexit.register(exit_handler)  # Make sure to always save the model when exiting
 
 # Variables
 must_test = False
 
 # Setup
 env = gym.make(args.environment)
-network_input_shape = (4,110,84) # Dimension ordering: 'th'
+network_input_shape = (4, 110, 84)  # Dimension ordering: 'th'
 DQA = DQAgent(
 	env.action_space.n,
 	network_input_shape,
@@ -101,7 +104,7 @@ for episode in range(args.max_episodes):
 
 	# Observe reward and initialize first state
 	observation = preprocess_observation(env.reset())
-	current_state = np.array([observation, observation, observation, observation]) # Initialize the first state with the same 4 images
+	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
 
 	for t in range(args.max_episode_length):
 		# Render the game if video output is not suppressed
@@ -109,7 +112,7 @@ for episode in range(args.max_episodes):
 			env.render()
 
 		# Select an action (at the beginning of the episode, actions are random)
-		remaining_random_actions = (remaining_random_actions - 1) if remaining_random_actions >= 0 else -1 # Clipped to -1 to avoid overflow
+		remaining_random_actions = (remaining_random_actions - 1) if (remaining_random_actions >= 0) else -1
 		action = DQA.get_action(np.asarray([current_state]), testing=must_test, force_random=(remaining_random_actions >= 0))
 
 		# Observe reward and next state
@@ -119,16 +122,15 @@ for episode in range(args.max_episodes):
 
 		if not must_test:
 			# Store transition in replay memory
-			clipped_reward = 1 if reward > 0 else (-1 if reward < 0 else 0) # Clip the reward like in the Deepmind paper
+			clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
 			DQA.add_experience(np.asarray([current_state]), action, clipped_reward, np.asarray([next_state]), done)
 
 			# Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
 			if t % args.update_freq == 0 and len(DQA.experiences) >= args.replay_start_size:
 				DQA.train()
-
-			# Every C network updates, update DQN_target
-			if DQA.training_count % args.target_network_update_freq == 0 and DQA.training_count >= args.target_network_update_freq:
-				DQA.reset_target_network()
+				# Every C network updates, update DQN_target
+				if DQA.training_count % args.target_network_update_freq == 0 and DQA.training_count >= args.target_network_update_freq:
+					DQA.reset_target_network()
 
 			# Linear epsilon annealing
 			if len(DQA.experiences) >= args.replay_start_size:
@@ -138,14 +140,14 @@ for episode in range(args.max_episodes):
 		current_state = next_state
 
 		# Logging
-		score += reward # Keep track of score
+		score += reward  # Keep track of score
 		if done or t == args.max_episode_length - 1:
 			if must_test:
-				logger.to_csv(test_csv, [t, score]) # Save episode data in the test csv
+				logger.to_csv(test_csv, [t, score])  # Save episode data in the test csv
 			else:
-				logger.to_csv(training_csv, [t, score]) # Save episode data in the training csv
+				logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
 			logger.log("Length: %d; Score: %d\n" % (t + 1, score))
-			must_test = (episode % args.test_freq == 0) # Every test_freq episodes we have a test episode
+			must_test = (episode % args.test_freq == 0)  # Every test_freq episodes we have a test episode
 			break
 
 

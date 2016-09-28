@@ -63,8 +63,7 @@ class DQNetwork:
 
 			# Set the target so that error will be 0 on all actions except the one taken
 			t = list(self.predict(datapoint['source'])[0])
-			t[datapoint['action']] = (datapoint['reward'] + self.discount_factor * next_Q_value) if not datapoint['final'] else \
-			datapoint['reward']
+			t[datapoint['action']] = (datapoint['reward'] + self.discount_factor * next_Q_value) if not datapoint['final'] else datapoint['reward']
 
 			t_train.append(t)
 
@@ -80,10 +79,13 @@ class DQNetwork:
 
 	def save(self, filename=None, append=''):
 		# Save the DQN weights to disk
-		print 'Saving...'
-		self.model.save_weights(self.logger.path + ('model%s.h5' % append if filename is None else filename))
+		f = (('model%s.h5' % append) if filename is None else filename)
+		if self.logger is not None:
+			self.logger.log('Saving model as %s' % f)
+		self.model.save_weights(self.logger.path + f)
 
 	def load(self, path):
 		# Load the model and its weights from path
-		print 'Loading...'
+		if self.logger is not None:
+			self.logger.log('Loading weights from file...')
 		self.model.load_weights(path)
