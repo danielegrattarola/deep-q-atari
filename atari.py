@@ -31,9 +31,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--train', action='store_true', help='train the agent')
 parser.add_argument('-l', '--load', type=str, default=None, help='load the neural network weights from the given path')
 parser.add_argument('-v', '--novideo', action='store_true', help='suppress video output (useful to train on headless servers)')
-parser.add_argument('-d', '--debug', help='Run in debug mode (no output files)', action='store_true')
+parser.add_argument('-d', '--debug', help='run in debug mode (no output files)', action='store_true')
 parser.add_argument('-e', '--environment', type=str,
-					help='Name of the OpenAI Gym environment to use (default: MsPacman-v0)\n'
+					help='name of the OpenAI Gym environment to use (default: MsPacman-v0)\n'
 						 'DeepMind paper: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0',
 					default='MsPacman-v0')
 parser.add_argument('--minibatch-size', type=int, default=32, help='number of transitions to train the DQN on')

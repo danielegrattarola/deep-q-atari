@@ -13,6 +13,9 @@ class DQNetwork:
 		self.learning_rate = learning_rate
 		self.dropout_prob = dropout_prob
 		self.logger = logger
+		self.training_history_csv = 'training_history.csv'
+		if self.logger is not None:
+			self.logger.to_csv(self.training_history_csv, 'Loss,Accuracy')
 
 		# Deep Q Network as defined in the DeepMind article on Nature
 		# Ordering th: (samples, channels, rows, cols)
@@ -71,7 +74,8 @@ class DQNetwork:
 		x_train = np.asarray(x_train).squeeze()
 		t_train = np.asarray(t_train).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=self.minibatch_size, nb_epoch=1)
-		self.logger.to_csv('training_history.csv', [history.history['loss'][0], history.history['acc'][0]])
+		if self.logger is not None:
+			self.logger.to_csv(self.training_history_csv, [history.history['loss'][0], history.history['acc'][0]])
 
 	def predict(self, state):
 		# Feed state into the DQN, return predicted Q-values
