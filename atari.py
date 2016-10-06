@@ -121,7 +121,7 @@ for episode in range(args.max_episodes):
 			env.render()
 
 		# Select an action (at the beginning of the episode, actions are random)
-		remaining_random_actions -= 1 if (remaining_random_actions > 0) else 0
+		remaining_random_actions = (remaining_random_actions - 1) if remaining_random_actions > 0 else -1
 		action = DQA.get_action(np.asarray([current_state]), testing=must_test, force_random=(remaining_random_actions >= 0))
 
 		# Observe reward and next state
