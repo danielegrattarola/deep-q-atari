@@ -52,11 +52,11 @@ parser.add_argument('--epsilon-decrease', type=float, default=0.0000009, help='r
 parser.add_argument('--replay-start-size', type=int, default=50000, help='minimum number of transitions (with fully random policy) to store in the replay memory before starting training')
 parser.add_argument('--initial-random-actions', type=int, default=30, help='number of random actions to be performed by the agent at the beginning of each episode')
 
-parser.add_argument('--dropout', type=float, default=0.1, help='dropout rate for the DQN')
+parser.add_argument('--dropout', type=float, default=0., help='dropout rate for the DQN')
 parser.add_argument('--max-episodes', type=int, default=10000, help='maximum number of episodes that the agent can experience before quitting')
 parser.add_argument('--max-episode-length', type=int, default=10000, help='maximum number of steps in an episode')
-parser.add_argument('--test-freq', type=int, default=100, help='frequency (number of episodes) with which to test the agent\'s performance')
-parser.add_argument('--test-states', type=int, default=30, help='number of states on which to compute the average Q value')
+parser.add_argument('--test-freq', type=int, default=10, help='frequency (number of episodes) with which to test the agent\'s performance')
+parser.add_argument('--test-states', type=int, default=20, help='number of states on which to compute the average Q value')
 args = parser.parse_args()
 
 if args.debug:
@@ -113,7 +113,7 @@ for episode in xrange(args.max_episodes):
 
 	# Observe reward and initialize first state
 	observation = preprocess_observation(env.reset())
-	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
+	current_state = np.array([observation, observation, observation, observation], dtype=np.float64)  # Initialize the first state with the same 4 images
 	# Main episode loop
 	for t in xrange(args.max_episode_length):
 		# Render the game if video output is not suppressed
@@ -132,7 +132,11 @@ for episode in xrange(args.max_episodes):
 		if not must_test:
 			# Store transition in replay memory
 			clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
-			DQA.add_experience(np.asarray([current_state]), action, clipped_reward, np.asarray([next_state]), done)
+			DQA.add_experience(np.asarray([current_state]).astype(np.uint8),
+                                            action,
+                                            clipped_reward,
+                                            np.asarray([next_state]).astype(np.uint8),
+                                            done)
 
 			# Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
 			if t % args.update_freq == 0 and len(DQA.experiences) >= args.replay_start_size:

@@ -77,7 +77,7 @@ class DQAgent:
 		return np.max(q_values)
 
 	def get_random_state(self):
-		return self.experiences.pop(random.randrange(0, len(self.experiences)))['source']
+		return self.experiences[random.randrange(0, len(self.experiences))]['source']
 
 	def add_experience(self, source, action, reward, dest, final):
 		# Remove older transitions if the replay memory is full
@@ -97,7 +97,7 @@ class DQAgent:
 		return np.asarray(batch)
 
 	def train(self):
-		# Sample a batch from experiences and train the DCN on it
+		# Sample a batch from experiences and train the DQN on it
 		self.training_count += 1
 		print 'Training session #%d - epsilon: %f' % (self.training_count, self.epsilon)
 		batch = self.sample_batch()
