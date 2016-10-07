@@ -37,9 +37,9 @@ parser.add_argument('-e', '--environment', type=str,
 						 'DeepMind paper: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0',
 					default='MsPacman-v0')
 parser.add_argument('--minibatch-size', type=int, default=32, help='number of transitions to train the DQN on')
-parser.add_argument('--replay-memory-size', type=int, default=1000000, help='number of samples stored in the replay memory')
-parser.add_argument('--target-network-update-freq', type=int, default=10000, help='frequency (number of DQN updates) with which the target DQN is updated')
-parser.add_argument('--avg-val-computation-freq', type=int, default=50000, help='frequency (number of DQN updates) with which the average reward and Q value are computed')
+parser.add_argument('--replay-memory-size', type=int, default=1e6, help='number of samples stored in the replay memory')
+parser.add_argument('--target-network-update-freq', type=int, default=10e3, help='frequency (number of DQN updates) with which the target DQN is updated')
+parser.add_argument('--avg-val-computation-freq', type=int, default=50e3, help='frequency (number of DQN updates) with which the average reward and Q value are computed')
 parser.add_argument('--discount-factor', type=float, default=0.99, help='discount factor for the environment')
 parser.add_argument('--update-freq', type=int, default=4, help='frequency (number of steps) with which to train the DQN')
 parser.add_argument('--learning-rate', type=float, default=0.00025, help='learning rate for the DQN')
@@ -48,15 +48,16 @@ parser.add_argument('--learning-rate', type=float, default=0.00025, help='learni
 # Missing: min squared gradient
 parser.add_argument('--epsilon', type=float, default=1, help='initial exploration rate for the agent')
 parser.add_argument('--min-epsilon', type=float, default=0.1, help='final exploration rate for the agent')
-parser.add_argument('--epsilon-decrease', type=float, default=0.0000009, help='rate at which to linearly decrease epsilon')
-parser.add_argument('--replay-start-size', type=int, default=50000, help='minimum number of transitions (with fully random policy) to store in the replay memory before starting training')
+parser.add_argument('--epsilon-decrease', type=float, default=9e-7, help='rate at which to linearly decrease epsilon')
+parser.add_argument('--replay-start-size', type=int, default=50e3, help='minimum number of transitions (with fully random policy) to store in the replay memory before starting training')
 parser.add_argument('--initial-random-actions', type=int, default=30, help='number of random actions to be performed by the agent at the beginning of each episode')
 
 parser.add_argument('--dropout', type=float, default=0., help='dropout rate for the DQN')
-parser.add_argument('--max-episodes', type=int, default=10000, help='maximum number of episodes that the agent can experience before quitting')
-parser.add_argument('--max-episode-length', type=int, default=10000, help='maximum number of steps in an episode')
-parser.add_argument('--test-freq', type=int, default=10, help='frequency (number of episodes) with which to test the agent\'s performance')
-parser.add_argument('--test-states', type=int, default=20, help='number of states on which to compute the average Q value')
+parser.add_argument('--max-episodes', type=int, default=np.inf, help='maximum number of episodes that the agent can experience before quitting')
+parser.add_argument('--max-episode-length', type=int, default=np.inf, help='maximum number of steps in an episode')
+parser.add_argument('--max-frames-number', type=int, default=50e6, help='maximum number of frames during the whole algorithm')
+parser.add_argument('--test-freq', type=int, default=100, help='frequency (number of episodes) with which to test the agent\'s performance')
+parser.add_argument('--test-states', type=int, default=30, help='number of states on which to compute the average Q value')
 args = parser.parse_args()
 
 if args.debug:
@@ -104,18 +105,26 @@ logger.to_csv(training_csv, 'length,score')
 logger.to_csv(test_csv, 'length,score')
 logger.to_csv(avg_val_csv, 'avg_score,avg_Q')
 
+episode = 0
+frame_counter = 0
+
 # Main loop
-for episode in xrange(args.max_episodes):
+while episode < args.max_episodes:
 	# Start episode
 	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
 	score = 0
-	remaining_random_actions = args.initial_random_actions # The first actions are forced to be random
+	remaining_random_actions = random.randint(0, args.initial_random_actions) # The first actions are forced to be random
 
 	# Observe reward and initialize first state
 	observation = preprocess_observation(env.reset())
 	current_state = np.array([observation, observation, observation, observation], dtype=np.float64)  # Initialize the first state with the same 4 images
+
+	frame_counter += 1 if not must_test else 0
 	# Main episode loop
-	for t in xrange(args.max_episode_length):
+	while t < args.max_episode_length:
+		if frame_counter > args.max_frames_number:
+			DQA.quit()
+
 		# Render the game if video output is not suppressed
 		if not args.novideo:
 			env.render()
@@ -130,13 +139,15 @@ for episode in xrange(args.max_episodes):
 		next_state = get_next_state(current_state, observation)
 
 		if not must_test:
+			frame_counter += 1
+
 			# Store transition in replay memory
 			clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
 			DQA.add_experience(np.asarray([current_state]).astype(np.uint8),
-                                            action,
-                                            clipped_reward,
-                                            np.asarray([next_state]).astype(np.uint8),
-                                            done)
+                               action,
+                               clipped_reward,
+                               np.asarray([next_state]).astype(np.uint8),
+                               done)
 
 			# Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
 			if t % args.update_freq == 0 and len(DQA.experiences) >= args.replay_start_size:
@@ -168,6 +179,8 @@ for episode in xrange(args.max_episodes):
 			logger.log("Length: %d; Score: %d\n" % (t + 1, score))
 			break
 
+		t += 1
+
 	# Keep track of score and average maximum Q value on the test states in order to compute the average
 	if not must_test:
 		if len(test_states) < args.test_states:
@@ -179,4 +192,6 @@ for episode in xrange(args.max_episodes):
 
 	# Every test_freq episodes we have a test episode
 	must_test = (episode % args.test_freq == 0)
+
+	episode += 1
 	# End episode
