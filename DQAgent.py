@@ -92,7 +92,7 @@ class DQAgent:
 	def sample_batch(self):
 		# Sample minibatch_size random transitions from experiences and return them as a batch
 		batch = []
-		for i in range(self.minibatch_size):
+		for i in xrange(self.minibatch_size):
 			batch.append(self.experiences[random.randrange(0, len(self.experiences))])
 		return np.asarray(batch)
 

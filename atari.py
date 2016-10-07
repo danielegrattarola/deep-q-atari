@@ -37,7 +37,7 @@ parser.add_argument('-e', '--environment', type=str,
 						 'DeepMind paper: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0',
 					default='MsPacman-v0')
 parser.add_argument('--minibatch-size', type=int, default=32, help='number of transitions to train the DQN on')
-parser.add_argument('--replay-memory-size', type=int, default=100000, help='number of samples stored in the replay memory')
+parser.add_argument('--replay-memory-size', type=int, default=1000000, help='number of samples stored in the replay memory')
 parser.add_argument('--target-network-update-freq', type=int, default=10000, help='frequency (number of DQN updates) with which the target DQN is updated')
 parser.add_argument('--avg-val-computation-freq', type=int, default=50000, help='frequency (number of DQN updates) with which the average reward and Q value are computed')
 parser.add_argument('--discount-factor', type=float, default=0.99, help='discount factor for the environment')
@@ -49,14 +49,14 @@ parser.add_argument('--learning-rate', type=float, default=0.00025, help='learni
 parser.add_argument('--epsilon', type=float, default=1, help='initial exploration rate for the agent')
 parser.add_argument('--min-epsilon', type=float, default=0.1, help='final exploration rate for the agent')
 parser.add_argument('--epsilon-decrease', type=float, default=0.0000009, help='rate at which to linearly decrease epsilon')
-parser.add_argument('--replay-start-size', type=int, default=5000, help='minimum number of transitions (with fully random policy) to store in the replay memory before starting training')
+parser.add_argument('--replay-start-size', type=int, default=50000, help='minimum number of transitions (with fully random policy) to store in the replay memory before starting training')
 parser.add_argument('--initial-random-actions', type=int, default=30, help='number of random actions to be performed by the agent at the beginning of each episode')
 
 parser.add_argument('--dropout', type=float, default=0.1, help='dropout rate for the DQN')
 parser.add_argument('--max-episodes', type=int, default=10000, help='maximum number of episodes that the agent can experience before quitting')
 parser.add_argument('--max-episode-length', type=int, default=10000, help='maximum number of steps in an episode')
-parser.add_argument('--test-freq', type=int, default=10, help='frequency (number of episodes) with which to test the agent\'s performance')
-parser.add_argument('--test-states', type=int, default=20, help='number of states on which to compute the average Q value')
+parser.add_argument('--test-freq', type=int, default=100, help='frequency (number of episodes) with which to test the agent\'s performance')
+parser.add_argument('--test-states', type=int, default=30, help='number of states on which to compute the average Q value')
 args = parser.parse_args()
 
 if args.debug:
@@ -80,6 +80,7 @@ DQA = DQAgent(
 	env.action_space.n,
 	network_input_shape,
 	replay_memory_size=args.replay_memory_size,
+	minibatch_size=args.minibatch_size,
 	learning_rate=args.learning_rate,
 	discount_factor=args.discount_factor,
 	dropout_prob=args.dropout,
@@ -104,7 +105,7 @@ logger.to_csv(test_csv, 'length,score')
 logger.to_csv(avg_val_csv, 'avg_score,avg_Q')
 
 # Main loop
-for episode in range(args.max_episodes):
+for episode in xrange(args.max_episodes):
 	# Start episode
 	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
 	score = 0
@@ -113,9 +114,8 @@ for episode in range(args.max_episodes):
 	# Observe reward and initialize first state
 	observation = preprocess_observation(env.reset())
 	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
-
 	# Main episode loop
-	for t in range(args.max_episode_length):
+	for t in xrange(args.max_episode_length):
 		# Render the game if video output is not suppressed
 		if not args.novideo:
 			env.render()
