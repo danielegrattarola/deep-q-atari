@@ -120,7 +120,7 @@ while episode < args.max_episodes:
 	current_state = np.array([observation, observation, observation, observation], dtype=np.float64)  # Initialize the first state with the same 4 images
 
 	frame_counter += 1 if not must_test else 0
-        t = 0
+	t = 0
 	# Main episode loop
 	while t < args.max_episode_length:
 		if frame_counter > args.max_frames_number:
