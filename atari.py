@@ -76,7 +76,7 @@ test_states = []
 
 # Setup
 env = gym.make(args.environment)
-network_input_shape = (4, 110, 84)  # Dimension ordering: 'th'
+network_input_shape = (4, 84, 84)  # Dimension ordering: 'th'
 DQA = DQAgent(
 	env.action_space.n,
 	network_input_shape,
