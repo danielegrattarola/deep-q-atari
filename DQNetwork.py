@@ -58,10 +58,10 @@ class DQNetwork:
 
 		# Generate training set and targets
 		for datapoint in batch:
-			x_train.append(datapoint['source'])
+			x_train.append(datapoint['source'].astype(np.float64))
 
 			# Get the Q-values for the next state from the target DQN and select the best of them
-			next_state_pred = list(DQN_target.predict(datapoint['dest']))
+			next_state_pred = DQN_target.predict(datapoint['dest'].astype(np.float64)).ravel()
 			next_Q_value = np.max(next_state_pred)
 
 			# Set the target so that error will be 0 on all actions except the one taken
@@ -71,8 +71,8 @@ class DQNetwork:
 			t_train.append(t)
 
 		# print next_state_pred  # Print a prediction so to have an idea of the Q-values magnitude
-		x_train = np.asarray(x_train, dtype=np.float64).squeeze()
-		t_train = np.asarray(t_train, dtype=np.float64).squeeze()
+		x_train = np.asarray(x_train).squeeze()
+		t_train = np.asarray(t_train).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=self.minibatch_size, nb_epoch=1)
 		if self.logger is not None:
 			self.logger.to_csv(self.training_history_csv, [history.history['loss'][0], history.history['acc'][0]])
