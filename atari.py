@@ -9,7 +9,7 @@ from Logger import Logger
 
 
 # Constants
-IMAGE_SHAPE = (84, 84)  # PIL wants the shape as columns by rows
+IMAGE_SHAPE = (84, 110)  # PIL wants the shape as columns by rows
 
 # Functions
 def preprocess_observation(obs):
@@ -76,7 +76,7 @@ test_states = []
 
 # Setup
 env = gym.make(args.environment)
-network_input_shape = (4, 84, 84)  # Dimension ordering: 'th'
+network_input_shape = (4, 110, 84)  # Dimension ordering: 'th'
 DQA = DQAgent(
 	env.action_space.n,
 	network_input_shape,
