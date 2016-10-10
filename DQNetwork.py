@@ -71,14 +71,15 @@ class DQNetwork:
 			t_train.append(t)
 
 		# print next_state_pred  # Print a prediction so to have an idea of the Q-values magnitude
-		x_train = np.asarray(x_train).squeeze()
-		t_train = np.asarray(t_train).squeeze()
+		x_train = np.asarray(x_train, dtype=np.float64).squeeze()
+		t_train = np.asarray(t_train, dtype=np.float64).squeeze()
 		history = self.model.fit(x_train, t_train, batch_size=self.minibatch_size, nb_epoch=1)
 		if self.logger is not None:
 			self.logger.to_csv(self.training_history_csv, [history.history['loss'][0], history.history['acc'][0]])
 
 	def predict(self, state):
 		# Feed state into the DQN, return predicted Q-values
+		state = state.astype(np.float64)
 		return self.model.predict(state, batch_size=1)
 
 	def save(self, filename=None, append=''):

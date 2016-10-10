@@ -117,7 +117,7 @@ while episode < args.max_episodes:
 
 	# Observe reward and initialize first state
 	observation = preprocess_observation(env.reset())
-	current_state = np.array([observation, observation, observation, observation], dtype=np.float64)  # Initialize the first state with the same 4 images
+	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
 
 	frame_counter += 1 if not must_test else 0
 	t = 0
@@ -147,10 +147,10 @@ while episode < args.max_episodes:
 
 			# Store transition in replay memory
 			clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
-			DQA.add_experience(np.asarray([current_state]).astype(np.uint8),
+			DQA.add_experience(np.asarray([current_state]),
                                action,
                                clipped_reward,
-                               np.asarray([next_state]).astype(np.uint8),
+                               np.asarray([next_state]),
                                done)
 
 			# Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
