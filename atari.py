@@ -9,7 +9,7 @@ from Logger import Logger
 
 
 # Constants
-IMAGE_SHAPE = (84, 110)  # PIL wants the shape as columns by rows
+IMAGE_SHAPE = (84, 84)  # PIL wants the shape as columns by rows
 
 # Functions
 def preprocess_observation(obs):
