@@ -74,7 +74,8 @@ class DQAgent:
 	def get_max_q(self, state):
 		# Returns the maximum Q value predicted on the given state
 		q_values = self.DQN.predict(state)
-		return np.max(q_values)
+		idxs = np.argwhere(q_values == np.max(q_values)).ravel()
+		return np.random.choice(idxs)
 
 	def get_random_state(self):
 		return self.experiences[random.randrange(0, len(self.experiences))]['source']
