@@ -48,7 +48,7 @@ class DQNetwork:
 		if load_path is not None:
 			self.load(load_path)
 
-		self.model.compile(loss='mean_squared_error', optimizer=self.optimizer, metrics=['accuracy'])
+		self.model.compile(loss='mean_absolute_error', optimizer=self.optimizer, metrics=['accuracy'])
 
 	def train(self, batch, DQN_target):
 		# Generate the xs and targets for the given batch, train the model on them
