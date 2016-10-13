@@ -9,7 +9,7 @@ from Logger import Logger
 
 
 # Constants
-IMAGE_SHAPE = (84, 110)  # PIL wants the shape as columns by rows
+IMAGE_SHAPE = (84, 84)  # PIL wants the shape as columns by rows
 
 # Functions
 def preprocess_observation(obs):
@@ -76,7 +76,7 @@ test_states = []
 
 # Setup
 env = gym.make(args.environment)
-network_input_shape = (4, 110, 84)  # Dimension ordering: 'th'
+network_input_shape = (4, 84, 84)  # Dimension ordering: 'th'
 DQA = DQAgent(
 	env.action_space.n,
 	network_input_shape,
@@ -113,7 +113,7 @@ while episode < args.max_episodes:
 	# Start episode
 	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
 	score = 0
-	remaining_random_actions = random.randint(0, args.initial_random_actions) # The first actions are forced to be random
+	remaining_random_actions = args.initial_random_actions # The first actions are forced to be random
 
 	# Observe reward and initialize first state
 	observation = preprocess_observation(env.reset())
