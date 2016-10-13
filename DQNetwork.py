@@ -67,6 +67,7 @@ class DQNetwork:
 			# Set the target so that error will be 0 on all actions except the one taken
 			t = list(self.predict(datapoint['source'])[0])
 			t[datapoint['action']] = (datapoint['reward'] + self.discount_factor * next_Q_value) if not datapoint['final'] else datapoint['reward']
+			t[datapoint['action']] = 1 if (t[datapoint['action']] >= 1) else (-1 if (t[datapoint['action']] <= -1) else t[datapoint['action']])  # Clip the target
 
 			t_train.append(t)
 
