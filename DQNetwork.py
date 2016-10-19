@@ -42,7 +42,7 @@ class DQNetwork:
 		self.model.add(Dense(self.actions))
 
 		# Optimization algorithm
-		self.optimizer = Adam()
+		self.optimizer = RMSprop()
 
 		# Load the network weights from saved model
 		if load_path is not None:
