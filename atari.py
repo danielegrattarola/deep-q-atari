@@ -180,7 +180,7 @@ while episode < args.max_episodes:
 
 		# TEST
 		if frame_counter > args.test_freq:
-			score = evaluate(DQA, env, args)
+			score = evaluate(DQA, args)
 			logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
 
 	# Keep track of score and average maximum Q value on the test states in order to compute the average

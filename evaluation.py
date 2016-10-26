@@ -16,12 +16,12 @@ def get_next_state(current, obs):
 	return np.append(current[1:], [obs], axis=0)
 
 
-def evaluate(DQA, env, args):
+def evaluate(DQA, args):
+    env = gym.make(args.environment)
     scores = list()
     frame_counter = 0
 
     while frame_counter < args.validation_frames:
-        scores_per_episode = list()
         remaining_random_actions = args.initial_random_actions
     	observation = preprocess_observation(env.reset())
         frame_counter += 1
@@ -44,10 +44,11 @@ def evaluate(DQA, env, args):
 
             # End episode
             if done or t < args.max_episode_length:
-                scores_per_episode.append(score)
+                print('Length: %d, Score: %f\n' % (t, score))
+                print('Frame counter: %d\n' % frame_counter)
                 break
 
-        scores.append(np.mean(scores_per_episode))
+        scores.append(score)
 
     return np.max(scores)
 
