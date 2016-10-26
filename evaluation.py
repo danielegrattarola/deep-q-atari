@@ -4,6 +4,52 @@ from builtins import range
 import time
 import numpy as np
 from joblib import Parallel, delayed
+from PIL import Image
+
+def preprocess_observation(obs):
+	image = Image.fromarray(obs, 'RGB').convert('L').resize((84, 110))  # Convert to gray-scale and resize according to PIL coordinates
+	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1], image.size[0])  # Convert to array and return
+
+
+def get_next_state(current, obs):
+	# Next state is composed by the last 3 images of the previous state and the new observation
+	return np.append(current[1:], [obs], axis=0)
+
+
+def evaluate(DQA, env, args):
+    scores = list()
+    frame_counter = 0
+
+    while frame_counter < args.validation_frames:
+        scores_per_episode = list()
+        remaining_random_actions = args.initial_random_actions
+    	observation = preprocess_observation(env.reset())
+        frame_counter += 1
+    	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
+        t = 0
+        score = 0
+
+        # Start episode
+        while True:
+            action = DQA.get_action(np.asarray([current_state]), testing=True, force_random=remaining_random_actions > 0)
+            observation, reward, done, info = env.step(action)
+            observation = preprocess_observation(observation)
+            current_state = get_next_state(current_state, observation)
+
+            remaining_random_actions -= 1 if remaining_random_actions > 0 else 0
+
+            score += reward
+            t += 1
+            frame_counter += 1
+
+            # End episode
+            if done or t < args.max_episode_length:
+                scores_per_episode.append(score)
+                break
+
+        scores.append(np.mean(scores_per_episode))
+
+    return np.max(scores)
 
 
 def _eval_and_render(mdp, policy, nbEpisodes=1, metric='discounted',

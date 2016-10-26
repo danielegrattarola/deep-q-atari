@@ -6,14 +6,12 @@ import gym
 import numpy as np
 from DQAgent import DQAgent
 from Logger import Logger
+from evaluation import evaluate
 
-
-# Constants
-IMAGE_SHAPE = (84, 110)  # PIL wants the shape as columns by rows
 
 # Functions
 def preprocess_observation(obs):
-	image = Image.fromarray(obs, 'RGB').convert('L').resize(IMAGE_SHAPE)  # Convert to gray-scale and resize
+	image = Image.fromarray(obs, 'RGB').convert('L').resize((84, 110))  # Convert to gray-scale and resize according to PIL coordinates
 	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1], image.size[0])  # Convert to array and return
 
 
@@ -25,6 +23,7 @@ def get_next_state(current, obs):
 def exit_handler():
 	global DQA
 	DQA.quit()
+
 
 # I/O
 parser = argparse.ArgumentParser()
@@ -56,7 +55,8 @@ parser.add_argument('--dropout', type=float, default=0., help='dropout rate for 
 parser.add_argument('--max-episodes', type=int, default=np.inf, help='maximum number of episodes that the agent can experience before quitting')
 parser.add_argument('--max-episode-length', type=int, default=np.inf, help='maximum number of steps in an episode')
 parser.add_argument('--max-frames-number', type=int, default=50e6, help='maximum number of frames during the whole algorithm')
-parser.add_argument('--test-freq', type=int, default=100, help='frequency (number of episodes) with which to test the agent\'s performance')
+parser.add_argument('--test-freq', type=int, default=250000, help='frequency (number of frames) with which to test the agent\'s performance')
+parser.add_argument('--validation-frames', type=int, default=135000, help='number of frames to test the model in table 3 of DeepMind paper')
 parser.add_argument('--test-states', type=int, default=30, help='number of states on which to compute the average Q value')
 args = parser.parse_args()
 
@@ -69,7 +69,6 @@ logger = Logger(debug=args.debug, append=args.environment)
 atexit.register(exit_handler)  # Make sure to always save the model when exiting
 
 # Variables
-must_test = False
 average_score_buffer = []
 average_Q_buffer = []
 test_states = []
@@ -114,16 +113,15 @@ frame_counter = 0
 # Main loop
 while episode < args.max_episodes:
 	# Start episode
-	logger.log("Episode %d %s" % (episode, '(test)' if must_test else ''))
+	logger.log("Episode %d" % (episode))
 	score = 0
-	remaining_random_actions = args.initial_random_actions # The first actions are forced to be random
 
 	# Observe reward and initialize first state
 	observation = preprocess_observation(env.reset())
 	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
 
-	frame_counter += 1 if not must_test else 0
 	t = 0
+	frame_counter += 1
 	# Main episode loop
 	while t < args.max_episode_length:
 		if frame_counter > args.max_frames_number:
@@ -134,44 +132,39 @@ while episode < args.max_episodes:
 			env.render()
 
 		# Select an action (at the beginning of the episode, actions are random)
-		if must_test:
-			remaining_random_actions = (remaining_random_actions - 1) if remaining_random_actions > 0 else -1
-			action = DQA.get_action(np.asarray([current_state]), testing=True, force_random=(remaining_random_actions >= 0))
-		else:
-			action = DQA.get_action(np.asarray([current_state]))
+		action = DQA.get_action(np.asarray([current_state]))
 
 		# Observe reward and next state
 		observation, reward, done, info = env.step(action)
 		observation = preprocess_observation(observation)
 		next_state = get_next_state(current_state, observation)
 
-		if not must_test:
-			frame_counter += 1
+		frame_counter += 1
 
-			# Store transition in replay memory
-			clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
-			DQA.add_experience(np.asarray([current_state]),
-                               action,
-                               clipped_reward,
-                               np.asarray([next_state]),
-                               done)
+		# Store transition in replay memory
+		clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
+		DQA.add_experience(np.asarray([current_state]),
+                           action,
+                           clipped_reward,
+                           np.asarray([next_state]),
+                           done)
 
-			# Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
-			if t % args.update_freq == 0 and len(DQA.experiences) >= args.replay_start_size:
-				DQA.train()
-				# Every C DQN updates, update DQN_target
-				if DQA.training_count % args.target_network_update_freq == 0 and DQA.training_count >= args.target_network_update_freq:
-					DQA.reset_target_network()
-				# Every avg_val_computation_freq DQN updates, log the average reward and Q value
-				if DQA.training_count % args.avg_val_computation_freq == 0 and DQA.training_count >= args.avg_val_computation_freq:
-					logger.to_csv(avg_val_csv, [np.mean(average_score_buffer), np.mean(average_Q_buffer)])
-					# Clear the lists
-					del average_score_buffer[:]
-					del average_Q_buffer[:]
+		# Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
+		if t % args.update_freq == 0 and len(DQA.experiences) >= args.replay_start_size:
+			DQA.train()
+			# Every C DQN updates, update DQN_target
+			if DQA.training_count % args.target_network_update_freq == 0 and DQA.training_count >= args.target_network_update_freq:
+				DQA.reset_target_network()
+			# Every avg_val_computation_freq DQN updates, log the average reward and Q value
+			if DQA.training_count % args.avg_val_computation_freq == 0 and DQA.training_count >= args.avg_val_computation_freq:
+				logger.to_csv(avg_val_csv, [np.mean(average_score_buffer), np.mean(average_Q_buffer)])
+				# Clear the lists
+				del average_score_buffer[:]
+				del average_Q_buffer[:]
 
-			# Linear epsilon annealing
-			if len(DQA.experiences) >= args.replay_start_size:
-				DQA.update_epsilon()
+		# Linear epsilon annealing
+		if len(DQA.experiences) >= args.replay_start_size:
+			DQA.update_epsilon()
 
 		# After transition, switch state
 		current_state = next_state
@@ -179,26 +172,24 @@ while episode < args.max_episodes:
 		score += reward  # Keep track of score
 		# Logging
 		if done or t == args.max_episode_length - 1:
-			if must_test:
-				logger.to_csv(test_csv, [t, score])  # Save episode data in the test csv
-			else:
-				logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
+			logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
 			logger.log("Length: %d; Score: %d\n" % (t + 1, score))
 			break
 
 		t += 1
 
-	# Keep track of score and average maximum Q value on the test states in order to compute the average
-	if not must_test:
-		if len(test_states) < args.test_states:
-			for _ in range(random.randint(1, 5)):
-				test_states.append(DQA.get_random_state())
-		else:
-			average_score_buffer.append(score)
-			average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
+		# TEST
+		if frame_counter > args.test_freq:
+			score = evaluate(DQA, env, args)
+			logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
 
-	# Every test_freq episodes we have a test episode
-	must_test = (episode % args.test_freq == 0)
+	# Keep track of score and average maximum Q value on the test states in order to compute the average
+	if len(test_states) < args.test_states:
+		for _ in range(random.randint(1, 5)):
+			test_states.append(DQA.get_random_state())
+	else:
+		average_score_buffer.append(score)
+		average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
 
 	episode += 1
 	# End episode
