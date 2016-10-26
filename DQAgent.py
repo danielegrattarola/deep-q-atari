@@ -9,7 +9,10 @@ class DQAgent:
 				 network_input_shape,
 				 replay_memory_size=1024,
 				 minibatch_size=32,
-				 learning_rate=0.01,
+				 learning_rate=0.00025,
+				 momentum=0.95,
+				 squared_momentum=0.95,
+				 min_squared_gradient=0.01,
 				 discount_factor=0.9,
 				 dropout_prob=0.1,
 				 epsilon=1,
@@ -22,6 +25,9 @@ class DQAgent:
 		self.network_input_shape = network_input_shape
 		self.actions = actions
 		self.learning_rate = learning_rate
+		self.momentum = momentum
+		self.squared_momentum = squared_momentum
+		self.min_squared_gradient = min_squared_gradient
 		self.dropout_prob = dropout_prob
 		self.load_path = load_path
 		self.replay_memory_size = replay_memory_size
@@ -42,6 +48,9 @@ class DQAgent:
 			self.actions,
 			self.network_input_shape,
 			learning_rate=self.learning_rate,
+			momentum=self.momentum,
+			squared_momentum=self.squared_momentum,
+			min_squared_gradient=self.min_squared_gradient,
 			discount_factor=self.discount_factor,
 			minibatch_size=self.minibatch_size,
 			dropout_prob=self.dropout_prob,
@@ -53,6 +62,9 @@ class DQAgent:
 			self.actions,
 			self.network_input_shape,
 			learning_rate=self.learning_rate,
+			momentum=self.momentum,
+			squared_momentum=self.squared_momentum,
+			min_squared_gradient=self.min_squared_gradient,
 			discount_factor=self.discount_factor,
 			minibatch_size=self.minibatch_size,
 			dropout_prob=self.dropout_prob,

@@ -5,12 +5,18 @@ import numpy as np
 
 
 class DQNetwork:
-	def __init__(self, actions, input_shape, minibatch_size=32, learning_rate=0.01, discount_factor=0.99, dropout_prob=0.1, load_path=None, logger=None):
+	def __init__(self, actions, input_shape, minibatch_size=32,
+				 learning_rate=0.00025, momentum=0.95, squared_momentum=0.95,
+				 min_squared_gradient=0.01,discount_factor=0.99,
+				 dropout_prob=0.1, load_path=None, logger=None):
 		self.model = Sequential()
 		self.actions = actions  # Size of the network output
 		self.discount_factor = discount_factor
 		self.minibatch_size = minibatch_size
 		self.learning_rate = learning_rate
+		self.momentum = momentum
+		self.squared_momentum = squared_momentum
+		self.min_squared_gradient = min_squared_gradient
 		self.dropout_prob = dropout_prob
 		self.logger = logger
 		self.training_history_csv = 'training_history.csv'
@@ -42,7 +48,10 @@ class DQNetwork:
 		self.model.add(Dense(self.actions))
 
 		# Optimization algorithm
-		self.optimizer = RMSprop()
+		self.optimizer = RMSpropGraves(lr=self.learning_rate,
+									   momentum=self.momentum,
+									   squared_momentum=self.squared_momentum,
+									   epsilon=self.min_squared_gradient)
 
 		# Load the network weights from saved model
 		if load_path is not None:

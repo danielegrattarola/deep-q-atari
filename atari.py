@@ -42,10 +42,10 @@ parser.add_argument('--target-network-update-freq', type=int, default=10e3, help
 parser.add_argument('--avg-val-computation-freq', type=int, default=50e3, help='frequency (number of DQN updates) with which the average reward and Q value are computed')
 parser.add_argument('--discount-factor', type=float, default=0.99, help='discount factor for the environment')
 parser.add_argument('--update-freq', type=int, default=4, help='frequency (number of steps) with which to train the DQN')
-parser.add_argument('--learning-rate', type=float, default=0.00025, help='learning rate for the DQN')
-# Missing: gradient momentum
-# Missing: squared gradient momentum
-# Missing: min squared gradient
+parser.add_argument('--learning-rate', type=float, default=0.00025, help='learning rate for RMSprop')
+parser.add_argument('--momentum', type=float, default=0.95, help='momentum for RMSprop')
+parser.add_argument('--squared-momentum', type=float, default=0.95, help='squared momentum for RMSprop')
+parser.add_argument('--min-squared-gradient', type=float, default=0.01, help='constant added to the denominator of RMSprop update')
 parser.add_argument('--epsilon', type=float, default=1, help='initial exploration rate for the agent')
 parser.add_argument('--min-epsilon', type=float, default=0.1, help='final exploration rate for the agent')
 parser.add_argument('--epsilon-decrease', type=float, default=9e-7, help='rate at which to linearly decrease epsilon')
@@ -83,6 +83,9 @@ DQA = DQAgent(
 	replay_memory_size=args.replay_memory_size,
 	minibatch_size=args.minibatch_size,
 	learning_rate=args.learning_rate,
+	momentum=args.momentum,
+	squared_momentum=args.squared_momentum,
+	min_squared_gradient=args.min_squared_gradient,
 	discount_factor=args.discount_factor,
 	dropout_prob=args.dropout,
 	epsilon=args.epsilon,
