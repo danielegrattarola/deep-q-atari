@@ -45,8 +45,8 @@ def evaluate(DQA, args):
 
             # End episode
             if done or t > args.max_episode_length:
-		episode += 1
-		print('Episode %d end\n---------------\nFrame counter: %d\n' % (episode, frame_counter))
+                episode += 1
+                print('Episode %d end\n---------------\nFrame counter: %d\n' % (episode, frame_counter))
                 print('Length: %d\n, Score: %f\n\n' % (t, score))
                 break
 
