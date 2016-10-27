@@ -55,9 +55,12 @@ def evaluate(DQA, args, logger):
                 logger.to_csv(evaluation_csv, [t, score])  # Save episode data in the evaluation csv
                 break
 
-        scores.append(score)
+        scores.append([t, score])
 
-    return np.max(scores)
+    scores = np.asarray(scores)
+    max_idx = np.random.choice(np.argwhere(scores[:, 1] == np.max(scores[:, 1])).ravel())
+    
+    return scores[max_idx, :].ravel()
 
 
 def _eval_and_render(mdp, policy, nbEpisodes=1, metric='discounted',
