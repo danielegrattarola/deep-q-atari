@@ -18,8 +18,7 @@ def get_next_state(current, obs):
 	return np.append(current[1:], [obs], axis=0)
 
 
-def evaluate(DQA, args):
-    logger = Logger(debug=args.debug, append=args.environment)
+def evaluate(DQA, args, logger):
     evaluation_csv = 'evaluation_info.csv'
     logger.to_csv(evaluation_csv, 'length,score')
     env = gym.make(args.environment)
