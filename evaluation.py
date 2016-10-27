@@ -27,7 +27,7 @@ def evaluate(DQA, args):
         frame_counter += 1
     	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
         t = 0
-		episode = 0
+        episode = 0
         score = 0
 
         # Start episode
@@ -44,10 +44,10 @@ def evaluate(DQA, args):
             frame_counter += 1
 
             # End episode
-            if done or t < args.max_episode_length:
-				episode += 1
-				print('Episode %d end\n---------------\nFrame counter: %d\n' % (episode, frame_counter))
-				print('Length: %d\n, Score: %f\n\n' % (t, score))
+            if done or t > args.max_episode_length:
+		episode += 1
+		print('Episode %d end\n---------------\nFrame counter: %d\n' % (episode, frame_counter))
+                print('Length: %d\n, Score: %f\n\n' % (t, score))
                 break
 
         scores.append(score)
