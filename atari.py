@@ -179,7 +179,7 @@ while episode < args.max_episodes:
 		t += 1
 
 		# TEST
-		if frame_counter > args.test_freq:
+		if frame_counter % args.test_freq == 0:
 			score = evaluate(DQA, args)
 			logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
 
