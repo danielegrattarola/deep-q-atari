@@ -6,6 +6,8 @@ import numpy as np
 from joblib import Parallel, delayed
 from PIL import Image
 
+from Logger import Logger
+
 def preprocess_observation(obs):
 	image = Image.fromarray(obs, 'RGB').convert('L').resize((84, 110))  # Convert to gray-scale and resize according to PIL coordinates
 	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1], image.size[0])  # Convert to array and return
@@ -17,6 +19,9 @@ def get_next_state(current, obs):
 
 
 def evaluate(DQA, args):
+    logger = Logger(debug=args.debug, append=args.environment)
+    evaluation_csv = 'evaluation_info.csv'
+    logger.to_csv(evaluation_csv, 'length,score')
     env = gym.make(args.environment)
     scores = list()
     frame_counter = 0
@@ -48,6 +53,7 @@ def evaluate(DQA, args):
                 episode += 1
                 print('Episode %d end\n---------------\nFrame counter: %d\n' % (episode, frame_counter))
                 print('Length: %d\n, Score: %f\n\n' % (t, score))
+                logger.to_csv(evaluation_csv, [t, score])  # Save episode data in the evaluation csv
                 break
 
         scores.append(score)
