@@ -160,33 +160,33 @@ while episode < args.max_episodes:
 
         frame_counter += 1
 
-    if args.train:
-        # Store transition in replay memory
-        clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
-        DQA.add_experience(np.asarray([current_state]),
-                           action,
-                           clipped_reward,
-                           np.asarray([next_state]),
-                           done)
+        if args.train:
+            # Store transition in replay memory
+            clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
+            DQA.add_experience(np.asarray([current_state]),
+                               action,
+                               clipped_reward,
+                               np.asarray([next_state]),
+                               done)
 
-        # Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
-        if t % args.update_freq == 0 and len(DQA.experiences) >= args.replay_start_size:
-            DQA.train()
-            # Every C DQN updates, update DQN_target
-            if DQA.training_count % args.target_network_update_freq == 0 and DQA.training_count >= args.target_network_update_freq:
-                DQA.reset_target_network()
-            # Every avg_val_computation_freq DQN updates, log the average reward and Q value
-            if DQA.training_count % args.avg_val_computation_freq == 0 and DQA.training_count >= args.avg_val_computation_freq:
-                logger.to_csv(avg_val_csv, [np.mean(average_score_buffer), np.mean(average_Q_buffer)])
-                # Clear the lists
-                del average_score_buffer[:]
-                del average_Q_buffer[:]
+            # Train the network (sample batches from replay memory, generate targets using DQN_target and update DQN)
+            if t % args.update_freq == 0 and len(DQA.experiences) >= args.replay_start_size:
+                DQA.train()
+                # Every C DQN updates, update DQN_target
+                if DQA.training_count % args.target_network_update_freq == 0 and DQA.training_count >= args.target_network_update_freq:
+                    DQA.reset_target_network()
+                # Every avg_val_computation_freq DQN updates, log the average reward and Q value
+                if DQA.training_count % args.avg_val_computation_freq == 0 and DQA.training_count >= args.avg_val_computation_freq:
+                    logger.to_csv(avg_val_csv, [np.mean(average_score_buffer), np.mean(average_Q_buffer)])
+                    # Clear the lists
+                    del average_score_buffer[:]
+                    del average_Q_buffer[:]
 
-        # Linear epsilon annealing
-        if len(DQA.experiences) >= args.replay_start_size:
-            DQA.update_epsilon()
+            # Linear epsilon annealing
+            if len(DQA.experiences) >= args.replay_start_size:
+                DQA.update_epsilon()
 
-        # After transition, switch state
+            # After transition, switch state
         current_state = next_state
 
         score += reward  # Keep track of score
@@ -204,13 +204,13 @@ while episode < args.max_episodes:
                 t_evaluation, score_evaluation = evaluate(DQA, args, logger)
                 logger.to_csv(test_csv, [t_evaluation, score_evaluation])  # Save episode data in the training csv
 
-    # Keep track of score and average maximum Q value on the test states in order to compute the average
-    if len(test_states) < args.test_states:
-        for _ in range(random.randint(1, 5)):
-            test_states.append(DQA.get_random_state())
-    else:
-        average_score_buffer.append(score)
-        average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
+        # Keep track of score and average maximum Q value on the test states in order to compute the average
+        if len(test_states) < args.test_states:
+            for _ in range(random.randint(1, 5)):
+                test_states.append(DQA.get_random_state())
+        else:
+            average_score_buffer.append(score)
+            average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
 
     episode += 1
 # End episode
