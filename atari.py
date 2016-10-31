@@ -204,13 +204,13 @@ while episode < args.max_episodes:
                 t_evaluation, score_evaluation = evaluate(DQA, args, logger)
                 logger.to_csv(test_csv, [t_evaluation, score_evaluation])  # Save episode data in the training csv
 
-        # Keep track of score and average maximum Q value on the test states in order to compute the average
-        if len(test_states) < args.test_states:
-            for _ in range(random.randint(1, 5)):
-                test_states.append(DQA.get_random_state())
-        else:
-            average_score_buffer.append(score)
-            average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
+            # Keep track of score and average maximum Q value on the test states in order to compute the average
+            if len(test_states) < args.test_states:
+                for _ in range(random.randint(1, 5)):
+                    test_states.append(DQA.get_random_state())
+            else:
+                average_score_buffer.append(score)
+                average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
 
     episode += 1
 # End episode
