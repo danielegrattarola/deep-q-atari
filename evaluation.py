@@ -8,7 +8,7 @@ from PIL import Image
 
 from Logger import Logger
 
-max = 0
+max_mean_score = 0
 
 def preprocess_observation(obs):
     image = Image.fromarray(obs, 'RGB').convert('L').resize(
@@ -23,6 +23,8 @@ def get_next_state(current, obs):
 
 
 def evaluate(DQA, args, logger):
+    global max_mean_score
+
     evaluation_csv = 'evaluation_info.csv'
     logger.to_csv(evaluation_csv, 'length,score')
     env = gym.make(args.environment)
@@ -72,7 +74,8 @@ def evaluate(DQA, args, logger):
     max_idx = np.random.choice(np.argwhere(scores[:, 1] == np.max(scores[:, 1])).ravel())
 
     # Save best model
-    if max < np.mean(scores):
+    if max_mean_score < np.mean(scores):
+        max_mean_score = np.mean(scores)
         DQA.DQN.save(append='_best')
 
     return scores[max_idx, :].ravel()
