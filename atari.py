@@ -147,7 +147,11 @@ while episode < args.max_episodes:
             env.render()
 
         # Select an action (at the beginning of the episode, actions are random)
-        action = DQA.get_action(np.asarray([current_state]))
+        if args.train:
+            action = DQA.get_action(np.asarray([current_state]))
+        else:
+            assert(args.load is not None)
+            action = DQA.get_action(np.asarray([current_state]), testing=True)
 
         # Observe reward and next state
         observation, reward, done, info = env.step(action)
