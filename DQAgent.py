@@ -127,8 +127,9 @@ class DQAgent:
 		self.DQN_target.model.set_weights(self.DQN.model.get_weights())
 
 	def quit(self):
-		# Save the DQN, quit
-		if self.logger is not None:
-			self.logger.log('Quitting...')
-		self.DQN.save(append='_DQN')
-		self.DQN_target.save(append='_DQN_target')
+        if self.load_path is not None:
+    		# Save the DQN, quit
+    		if self.logger is not None:
+    			self.logger.log('Quitting...')
+    		self.DQN.save(append='_DQN')
+    		self.DQN_target.save(append='_DQN_target')
