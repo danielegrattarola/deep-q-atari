@@ -8,14 +8,17 @@ from PIL import Image
 
 from Logger import Logger
 
+
 def preprocess_observation(obs):
-	image = Image.fromarray(obs, 'RGB').convert('L').resize((84, 110))  # Convert to gray-scale and resize according to PIL coordinates
-	return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1], image.size[0])  # Convert to array and return
+    image = Image.fromarray(obs, 'RGB').convert('L').resize(
+        (84, 110))  # Convert to gray-scale and resize according to PIL coordinates
+    return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1],
+                                                               image.size[0])  # Convert to array and return
 
 
 def get_next_state(current, obs):
-	# Next state is composed by the last 3 images of the previous state and the new observation
-	return np.append(current[1:], [obs], axis=0)
+    # Next state is composed by the last 3 images of the previous state and the new observation
+    return np.append(current[1:], [obs], axis=0)
 
 
 def evaluate(DQA, args, logger):
@@ -27,16 +30,18 @@ def evaluate(DQA, args, logger):
 
     while frame_counter < args.validation_frames:
         remaining_random_actions = args.initial_random_actions
-    	observation = preprocess_observation(env.reset())
+        observation = preprocess_observation(env.reset())
         frame_counter += 1
-    	current_state = np.array([observation, observation, observation, observation])  # Initialize the first state with the same 4 images
+        current_state = np.array(
+            [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
         t = 0
         episode = 0
         score = 0
 
         # Start episode
         while True:
-            action = DQA.get_action(np.asarray([current_state]), testing=True, force_random=remaining_random_actions > 0)
+            action = DQA.get_action(np.asarray([current_state]), testing=True,
+                                    force_random=remaining_random_actions > 0)
             observation, reward, done, info = env.step(action)
             observation = preprocess_observation(observation)
             current_state = get_next_state(current_state, observation)
@@ -59,7 +64,7 @@ def evaluate(DQA, args, logger):
 
     scores = np.asarray(scores)
     max_idx = np.random.choice(np.argwhere(scores[:, 1] == np.max(scores[:, 1])).ravel())
-    
+
     return scores[max_idx, :].ravel()
 
 
