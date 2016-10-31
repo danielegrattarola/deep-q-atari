@@ -124,43 +124,39 @@ logger.to_csv(avg_val_csv, 'avg_score,avg_Q')
 episode = 0
 frame_counter = 0
 
-# Main loop
-while episode < args.max_episodes:
-    # Start episode
-    logger.log("Episode %d" % (episode))
-    score = 0
+if args.train:
+    # Main loop
+    while episode < args.max_episodes:
+        # Start episode
+        logger.log("Episode %d" % (episode))
+        score = 0
 
-    # Observe reward and initialize first state
-    observation = preprocess_observation(env.reset())
-    current_state = np.array(
-        [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
+        # Observe reward and initialize first state
+        observation = preprocess_observation(env.reset())
+        current_state = np.array(
+            [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
 
-    t = 0
-    frame_counter += 1
-    # Main episode loop
-    while t < args.max_episode_length:
-        if frame_counter > args.max_frames_number:
-            DQA.quit()
-
-        # Render the game if video output is not suppressed
-        if not args.novideo:
-            env.render()
-
-        # Select an action (at the beginning of the episode, actions are random)
-        if args.train:
-            action = DQA.get_action(np.asarray([current_state]))
-        else:
-            assert(args.load is not None)
-            action = DQA.get_action(np.asarray([current_state]), testing=True)
-
-        # Observe reward and next state
-        observation, reward, done, info = env.step(action)
-        observation = preprocess_observation(observation)
-        next_state = get_next_state(current_state, observation)
-
+        t = 0
         frame_counter += 1
+        # Main episode loop
+        while t < args.max_episode_length:
+            if frame_counter > args.max_frames_number:
+                DQA.quit()
 
-        if args.train:
+            # Render the game if video output is not suppressed
+            if not args.novideo:
+                env.render()
+
+            # Select an action (at the beginning of the episode, actions are random)
+            action = DQA.get_action(np.asarray([current_state]))
+
+            # Observe reward and next state
+            observation, reward, done, info = env.step(action)
+            observation = preprocess_observation(observation)
+            next_state = get_next_state(current_state, observation)
+
+            frame_counter += 1
+
             # Store transition in replay memory
             clipped_reward = 1 if (reward >= 1) else (-1 if (reward <= -1) else reward)  # Clip the reward
             DQA.add_experience(np.asarray([current_state]),
@@ -187,30 +183,31 @@ while episode < args.max_episodes:
                 DQA.update_epsilon()
 
             # After transition, switch state
-        current_state = next_state
+            current_state = next_state
 
-        score += reward  # Keep track of score
-        # Logging
-        if done or t == args.max_episode_length - 1:
-            logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
-            logger.log("Length: %d; Score: %d\n" % (t + 1, score))
-            break
+            score += reward  # Keep track of score
+            # Logging
+            if done or t == args.max_episode_length - 1:
+                logger.to_csv(training_csv, [t, score])  # Save episode data in the training csv
+                logger.log("Length: %d; Score: %d\n" % (t + 1, score))
+                break
 
-        t += 1
+            t += 1
 
-        # TEST
-        if args.train:
+            # TEST
             if frame_counter % args.test_freq == 0:
                 t_evaluation, score_evaluation = evaluate(DQA, args, logger)
                 logger.to_csv(test_csv, [t_evaluation, score_evaluation])  # Save episode data in the training csv
 
-        # Keep track of score and average maximum Q value on the test states in order to compute the average
-        if len(test_states) < args.test_states:
-            for _ in range(random.randint(1, 5)):
-                test_states.append(DQA.get_random_state())
-        else:
-            average_score_buffer.append(score)
-            average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
+            # Keep track of score and average maximum Q value on the test states in order to compute the average
+            if len(test_states) < args.test_states:
+                for _ in range(random.randint(1, 5)):
+                    test_states.append(DQA.get_random_state())
+            else:
+                average_score_buffer.append(score)
+                average_Q_buffer.append(np.mean([DQA.get_max_q(state) for state in test_states]))
 
-    episode += 1
-# End episode
+        episode += 1
+    # End episode
+else:
+    evaluate(DQA, args, logger)
