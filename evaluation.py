@@ -32,10 +32,6 @@ def evaluate(DQA, args, logger):
         remaining_random_actions = args.initial_random_actions
         observation = preprocess_observation(env.reset())
 
-        # Render the game if video output is not suppressed
-        if not args.novideo:
-            env.render()
-
         frame_counter += 1
         current_state = np.array(
             [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
@@ -45,6 +41,10 @@ def evaluate(DQA, args, logger):
 
         # Start episode
         while True:
+            # Render the game if video output is not suppressed
+            if not args.novideo:
+                env.render()
+
             action = DQA.get_action(np.asarray([current_state]), testing=True,
                                     force_random=remaining_random_actions > 0)
             observation, reward, done, info = env.step(action)
