@@ -8,6 +8,7 @@ from PIL import Image
 
 from Logger import Logger
 
+max = 0
 
 def preprocess_observation(obs):
     image = Image.fromarray(obs, 'RGB').convert('L').resize(
@@ -69,6 +70,10 @@ def evaluate(DQA, args, logger):
 
     scores = np.asarray(scores)
     max_idx = np.random.choice(np.argwhere(scores[:, 1] == np.max(scores[:, 1])).ravel())
+
+    # Save best model
+    if max < np.mean(scores):
+        DQA.DQN.save(append='_best')
 
     return scores[max_idx, :].ravel()
 
