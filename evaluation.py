@@ -31,6 +31,11 @@ def evaluate(DQA, args, logger):
     while frame_counter < args.validation_frames:
         remaining_random_actions = args.initial_random_actions
         observation = preprocess_observation(env.reset())
+
+        # Render the game if video output is not suppressed
+        if not args.novideo:
+            env.render()
+
         frame_counter += 1
         current_state = np.array(
             [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
