@@ -70,7 +70,7 @@ class DQNetwork:
         for datapoint in batch:
             x_train.append(datapoint['source'].astype(np.float64))
 
-            # Get the Q-values for the next state from the target DQN and select the best of them
+            # Apply the DQN or DDQN Q-value selection
             next_state_pred = DQN_target.predict(datapoint['dest'].astype(np.float64)).ravel()
             if args.double:
                 next_Q_value_idx = np.argmax(DQN.predict(datapoint['dest'].astype(np.float64)).ravel())
