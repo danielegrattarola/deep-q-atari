@@ -72,7 +72,11 @@ class DQNetwork:
 
             # Get the Q-values for the next state from the target DQN and select the best of them
             next_state_pred = DQN_target.predict(datapoint['dest'].astype(np.float64)).ravel()
-            next_Q_value = np.max(next_state_pred)
+            if args.double:
+                next_Q_value_idx = np.argmax(DQN.predict(datapoint['dest'].astype(np.float64)).ravel())
+                next_Q_value = next_state_pred[next_Q_value_idx]
+            else:
+                next_Q_value = np.max(next_state_pred)
 
             # Set the target so that error will be 0 on all actions except the one taken
             t = list(self.predict(datapoint['source'])[0])

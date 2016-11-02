@@ -30,6 +30,7 @@ parser.add_argument('-e', '--environment', type=str,
                     help='name of the OpenAI Gym environment to use (default: MsPacman-v0)\n'
                          'DeepMind paper: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0',
                     default='MsPacman-v0')
+parser.add_argument('--double', action='store_true', help='use DDQN instead of DQN')
 parser.add_argument('--minibatch-size', type=int, default=32, help='number of transitions to train the DQN on')
 parser.add_argument('--replay-memory-size', type=int, default=1e6, help='number of samples stored in the replay memory')
 parser.add_argument('--target-network-update-freq', type=int, default=10e3,
