@@ -1,31 +1,23 @@
 import argparse
 import atexit
 import random
-from PIL import Image
+
 import gym
 import numpy as np
+from PIL import Image
+
+import utils
 from DQAgent import DQAgent
-from Logger import Logger
 from evaluation import evaluate
-
-
-# Functions
-def preprocess_observation(obs):
-    image = Image.fromarray(obs, 'RGB').convert('L').resize(
-        (84, 110))  # Convert to gray-scale and resize according to PIL coordinates
-    return np.asarray(image.getdata(), dtype=np.uint8).reshape(image.size[1],
-                                                               image.size[0])  # Convert to array and return
-
-
-def get_next_state(current, obs):
-    # Next state is composed by the last 3 images of the previous state and the new observation
-    return np.append(current[1:], [obs], axis=0)
+from Logger import Logger
 
 
 def exit_handler():
     global DQA
     DQA.quit()
 
+IMG_SIZE = (84, 110)
+utils.IMG_SIZE = IMG_SIZE
 
 # I/O
 parser = argparse.ArgumentParser()
@@ -132,7 +124,7 @@ if args.train:
         score = 0
 
         # Observe reward and initialize first state
-        observation = preprocess_observation(env.reset())
+        observation = utils.preprocess_observation(env.reset())
         current_state = np.array(
             [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
 
@@ -152,8 +144,8 @@ if args.train:
 
             # Observe reward and next state
             observation, reward, done, info = env.step(action)
-            observation = preprocess_observation(observation)
-            next_state = get_next_state(current_state, observation)
+            observation = utils.preprocess_observation(observation)
+            next_state = utils.get_next_state(current_state, observation)
 
             frame_counter += 1
 
