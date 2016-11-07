@@ -21,7 +21,6 @@ utils.IMG_SIZE = IMG_SIZE
 
 # I/O
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--train', action='store_true', help='train the agent')
 parser.add_argument('-l', '--load', type=str, default=None, help='load the neural network weights from the given path')
 parser.add_argument('-v', '--novideo', action='store_true',
                     help='suppress video output (useful to train on headless servers)')
@@ -117,7 +116,11 @@ logger.to_csv(avg_val_csv, 'avg_score,avg_Q')
 episode = 0
 frame_counter = 0
 
-if args.train:
+# TODO: now the loaded model can only be used for evaluation. Make it possible
+#       to train it after loading. Be careful to restore not only the model,
+#       but also the experience replay memory, the epsilon, the optimizer
+#       learning rate and so on.
+if args.load is None:
     # Main loop
     while episode < args.max_episodes:
         # Start episode
