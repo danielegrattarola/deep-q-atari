@@ -8,3 +8,5 @@ data/
 *.txt
 *.zip
 *.pdf
+*.egg-info
+*~
