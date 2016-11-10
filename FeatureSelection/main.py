@@ -27,5 +27,6 @@ while not done:
     if args.video:
         raw_input()
         env.render()
+print 'Episode lasted', frame_counter, 'frames'
 # End episode
 
