@@ -4,10 +4,11 @@ from PIL import Image
 
 class Viewer:
 
-    def __init__(self, height=9, width=16, cell_size=10, wall=True):
+    def __init__(self, width=16, height=9, cell_size=10, wall=True):
         pg.init()
-        self.height = height
+        # Game parameters
         self.width = width
+        self.height = height
         self.cell_size = cell_size
         self.wall = wall
         self.screen_size = (self.width * self.cell_size, self.height * self.cell_size)
@@ -19,16 +20,16 @@ class Viewer:
 
         # Directions
         self.directions = {
-            0: (0,  -self.cell_size), # UP
+            0: (0, -self.cell_size), # UP
             1: (0, self.cell_size), # DOWN
             2: (self.cell_size, 0), # RIGHT
             3: (-self.cell_size, 0) # LEFT
         }
 
-        # Main surfaces
+        # Surfaces
         self.surface = pg.Surface(self.screen_size)  # Main game surface
         self.surface.fill((0, 0, 0))
-        self.character = pg.Surface((self.cell_size, self.cell_size))  # Character surface
+        self.character = pg.Surface((self.cell_size, self.cell_size))  # Agent surface
         self.character.fill((255, 255, 255))
         self.goal = pg.Surface((self.cell_size, self.cell_size)) # Goal surface
         self.goal.fill((0, 255, 255))
@@ -38,10 +39,11 @@ class Viewer:
         # Screen
         self.screen = None
 
-        self.initialize()
+        self.initialize_env()
+        self.reset_agent()
         self.draw()
 
-    def initialize(self):
+    def initialize_env(self):
         # Reset position data
         self.goal_pos = set()
         self.wall_pos = set()
@@ -57,9 +59,10 @@ class Viewer:
             for y in range(random.randrange(2, self.height/2)): # Wall must be at least 2 cells long
                 self.wall_pos.add((x, y * self.cell_size))
 
-        # Init character
+    def reset_agent(self):
+        # Randomly place agent on any row of the first column
         y = random.randrange(0, self.height) * self.cell_size
-        self.char_pos = (0, y)  # Initial position is random
+        self.char_pos = (0, y)
         self.draw()
 
     def draw(self):
@@ -79,14 +82,15 @@ class Viewer:
         self.surface.blit(self.character, self.char_pos)
 
     def render(self):
+        # Start the game window the first time
         if self.screen is None:
             self.screen = pg.display.set_mode(self.screen_size)
         self.screen.blit(self.surface, (0, 0))
         self.draw()
         pg.display.update()
 
-    def move_character(self, action):
-        self.char_pos = self._get_new_char_pos(action)
+    def move_agent(self, action):
+        self.char_pos = self._get_new_agent_pos(action)
         self.draw()
 
     def get_state(self):
@@ -102,7 +106,7 @@ class Viewer:
             pg.display.quit()
 
     # HELPERS
-    def _get_new_char_pos(self, action):
+    def _get_new_agent_pos(self, action):
         addendum = self.directions[action]
         x = self.char_pos[0] + addendum[0]
         y = self.char_pos[1] + addendum[1]
@@ -111,3 +115,5 @@ class Viewer:
             return self.char_pos
         else:
             return new_pos
+
+

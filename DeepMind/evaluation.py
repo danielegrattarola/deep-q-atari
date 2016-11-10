@@ -23,7 +23,7 @@ def evaluate(DQA, args, logger):
 
     while frame_counter < args.validation_frames:
         remaining_random_actions = args.initial_random_actions
-        observation = utils.preprocess_observation(env.reset())
+        observation = utils.preprocess_observation(env.reset_agent())
 
         frame_counter += 1
         current_state = np.array(
@@ -123,7 +123,7 @@ def _eval_and_render_vectorial(mdp, policy, nbEpisodes=1, metric='discounted',
             mdp.render(mode='human')
         if hasattr(mdp, 'horizon'):
             H = mdp.horizon
-        mdp.reset()
+        mdp.reset_agent()
         state = mdp._reset(initialState)
         while (t < H) and (not done):
             if policy:
@@ -217,7 +217,7 @@ def collectEpisode(mdp, policy=None):
     action = None
     if hasattr(mdp, 'horizon'):
         H = mdp.horizon
-    state = mdp.reset()
+    state = mdp.reset_agent()
     while (t < H) and (not done):
         if policy:
             action = policy.get_action(state)

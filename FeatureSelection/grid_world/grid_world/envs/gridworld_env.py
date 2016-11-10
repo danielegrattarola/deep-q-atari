@@ -14,12 +14,14 @@ class GridWorldEnv(gym.Env):
     }
 
     def __init__(self):
-        self.height = 9
         self.width = 16
+        self.height = 9
         self._cell_size = 10
 
-        self.action_space = spaces.Discrete(3)
+        self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(self.height * self._cell_size, self.width * self._cell_size, 1)
+
+        self.viewer = Viewer(width=self.width, height=self.height, cell_size=self._cell_size)
 
         self._seed()
         self.reset()
@@ -30,14 +32,14 @@ class GridWorldEnv(gym.Env):
 
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
-        self.viewer.move_character(action)
+        self.viewer.move_agent(action)
         self.state = self.viewer.get_state()
         done = self.viewer.is_on_goal()
         reward = 1 if done else 0
         return self.state, reward, done, {}
 
-    def _reset(self, height=9, width=16):
-        self.viewer = Viewer(height=height, width=width, cell_size=self._cell_size)
+    def _reset(self):
+        self.viewer.reset_agent()
         self.state = self.viewer.get_state()
         return self.state
 
@@ -48,3 +50,9 @@ class GridWorldEnv(gym.Env):
                 self.viewer = None
             return
         return self.viewer.render()
+
+    def set_grid_size(self, width, height):
+        self.width = width
+        self.height = height
+        self.viewer = Viewer(height=self.height, width=self.width, cell_size=self._cell_size)
+        self.reset()
