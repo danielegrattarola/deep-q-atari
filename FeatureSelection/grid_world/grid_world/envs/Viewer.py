@@ -95,7 +95,7 @@ class Viewer:
 
     def get_state(self):
         str = pg.image.tostring(self.surface, 'RGB')
-        out = Image.fromstring('RGB', self.screen_size, str).convert('L')
+        out = Image.frombytes('RGB', self.screen_size, str).convert('L')
         return out
 
     def is_on_goal(self):
