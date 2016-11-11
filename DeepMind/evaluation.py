@@ -23,7 +23,7 @@ def evaluate(DQA, args, logger):
 
     while frame_counter < args.validation_frames:
         remaining_random_actions = args.initial_random_actions
-        observation = utils.preprocess_observation(env.reset_agent())
+        observation = utils.preprocess_observation(env.reset())
 
         frame_counter += 1
         current_state = np.array(
@@ -217,7 +217,7 @@ def collectEpisode(mdp, policy=None):
     action = None
     if hasattr(mdp, 'horizon'):
         H = mdp.horizon
-    state = mdp.reset_agent()
+    state = mdp.reset()
     while (t < H) and (not done):
         if policy:
             action = policy.get_action(state)
