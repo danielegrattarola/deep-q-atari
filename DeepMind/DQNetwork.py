@@ -8,7 +8,7 @@ class DQNetwork:
     def __init__(self, actions, input_shape, minibatch_size=32,
                  learning_rate=0.00025, momentum=0.95, squared_momentum=0.95,
                  min_squared_gradient=0.01, discount_factor=0.99,
-                 dropout_prob=0.1, load_path=None, logger=None):
+                 dropout_prob=0.1, load_path=None, logger=None, args=None):
         self.model = Sequential()
         self.actions = actions  # Size of the network output
         self.discount_factor = discount_factor
@@ -19,6 +19,7 @@ class DQNetwork:
         self.min_squared_gradient = min_squared_gradient
         self.dropout_prob = dropout_prob
         self.logger = logger
+        self.args = args
         self.training_history_csv = 'training_history.csv'
         if self.logger is not None:
             self.logger.to_csv(self.training_history_csv, 'Loss,Accuracy')
@@ -72,8 +73,8 @@ class DQNetwork:
 
             # Apply the DQN or DDQN Q-value selection
             next_state_pred = DQN_target.predict(datapoint['dest'].astype(np.float64)).ravel()
-            if args.double:
-                next_Q_value_idx = np.argmax(DQN.predict(datapoint['dest'].astype(np.float64)).ravel())
+            if self.args.double:
+                next_Q_value_idx = np.argmax(self.model.predict(datapoint['dest'].astype(np.float64)).ravel())
                 next_Q_value = next_state_pred[next_Q_value_idx]
             else:
                 next_Q_value = np.max(next_state_pred)

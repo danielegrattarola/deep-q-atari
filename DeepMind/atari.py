@@ -97,7 +97,8 @@ DQA = DQAgent(
     epsilon_decrease_rate=args.epsilon_decrease,
     min_epsilon=args.min_epsilon,
     load_path=args.load,
-    logger=logger
+    logger=logger,
+    args=args
 )
 
 # Initial logging

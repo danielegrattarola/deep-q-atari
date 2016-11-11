@@ -19,7 +19,8 @@ class DQAgent:
                  epsilon_decrease_rate=0.99,
                  min_epsilon=0.1,
                  load_path=None,
-                 logger=None):
+                 logger=None,
+                 args=None):
 
         # Parameters
         self.network_input_shape = network_input_shape
@@ -37,6 +38,7 @@ class DQAgent:
         self.epsilon_decrease_rate = epsilon_decrease_rate
         self.min_epsilon = min_epsilon  # Minimum epsilon value
         self.logger = logger
+        self.args = args
 
         # Replay memory
         self.experiences = []
@@ -55,7 +57,8 @@ class DQAgent:
             minibatch_size=self.minibatch_size,
             dropout_prob=self.dropout_prob,
             load_path=self.load_path,
-            logger=self.logger
+            logger=self.logger,
+            args=self.args
         )
         # Target DQN used to generate targets
         self.DQN_target = DQNetwork(
@@ -69,7 +72,8 @@ class DQAgent:
             minibatch_size=self.minibatch_size,
             dropout_prob=self.dropout_prob,
             load_path=self.load_path,
-            logger=self.logger
+            logger=self.logger,
+            args=self.args
         )
         # Reset target DQN
         self.DQN_target.model.set_weights(self.DQN.model.get_weights())
