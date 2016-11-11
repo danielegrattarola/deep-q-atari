@@ -128,7 +128,7 @@ if args.load is None:
         score = 0
 
         # Observe reward and initialize first state
-        observation = utils.preprocess_observation(env.reset_agent())
+        observation = utils.preprocess_observation(env.reset())
         current_state = np.array(
             [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
 

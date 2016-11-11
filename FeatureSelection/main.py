@@ -21,7 +21,7 @@ frame_counter = 0
 while not done:
     frame_counter += 1
     # Select an action
-    action = random.randrange(0, action_space)
+    action = random.randrange(0,1)
     # Execute the action, get next state and reward
     state, reward, done, info = env.step(action)
     if args.video:
