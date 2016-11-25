@@ -33,14 +33,19 @@ you'll see the options list. Possible options are:
 `-l, --load`: load the neural network weights from the given path;  
 `-v, --novideo`: suppress video output (useful to train on headless servers);  
 `-d, --debug`: run in debug mode (no output files);  
-`-e, --environment`: name of the OpenAI Gym environment to use (default: MsPacman-v0).;  
+`-e, --environment`: name of the OpenAI Gym environment to use (default: MsPacman-v0);  
+`--double`: use DDQN instead of DQN;  
+`--dataset-size`: number of gathered samples on which to train the DQN;  
 `--minibatch-size`: number of transitions to train the DQN on;  
 `--replay-memory-size`: number of samples stored in the replay memory;  
-`--target-network-update-freq`: frequency (number of DQN updates) with which the target DQN is updated;  
+`--target-network-update-freq`: frequency (number of frames) with which the target DQN is updated;  
 `--avg-val-computation-freq`: frequency (number of DQN updates) with which the average reward and Q value are computed;  
 `--discount-factor`: discount factor for the environment;  
 `--update-freq`: frequency (number of steps) with which to train the DQN;  
 `--learning-rate`: learning rate for the DQN;  
+`--momentum`: momentum for RMSprop;  
+`--squared-momentum`: squared momentum for RMSprop;  
+`--min-squared-gradient`: constant added to the denominator of RMSprop update;  
 `--epsilon`: initial exploration rate for the agent;  
 `--min-epsilon`: final exploration rate for the agent;  
 `--epsilon-decrease`: rate at which to linearly decrease epsilon;  
@@ -49,11 +54,13 @@ you'll see the options list. Possible options are:
 `--dropout`: dropout rate for the DQN;  
 `--max-episodes`: maximum number of episodes that the agent can experience before quitting;  
 `--max-episode-length`: maximum number of steps in an episode;  
+`--max-frames-number`: maximum number of frames for a run;  
 `--test-freq`: frequency (number of episodes) with which to test the agent's performance;  
+`--validation-frames`: number of frames to test the model in table 3 of DeepMind paper  
 `--test-states`: number of states on which to compute the average Q value;  
   
 The possible environments on which the agent can be trained are all the environments in the Atari gym package, which include: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0, etc..  
-A typical usage of this script on an dedicated headless VPS (e.g. EC2 instance) would look like this:
+A typical usage of this script on an headless server (e.g. EC2 instance) would look like this:
 ```sh
 python atari.py -t -v -e Breakout-v0 
 ```  
