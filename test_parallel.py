@@ -26,5 +26,5 @@ DQA = DQAgent(
     network_input_shape
 )
 
-episodes = evaluation.collectEpisode(env, DQA)
+episodes = evaluation.collect_episode(env, DQA)
 joblib.dump(episodes, logger.path + 'evaluation_dataset.pickle')

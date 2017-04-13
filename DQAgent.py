@@ -1,6 +1,6 @@
+import numpy as np
 from DQNetwork import DQNetwork
 from random import random, randrange, randint
-import numpy as np
 
 
 class DQAgent:

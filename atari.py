@@ -18,14 +18,14 @@ utils.IMG_SIZE = IMG_SIZE
 
 # I/O
 parser = argparse.ArgumentParser()
+parser.add_argument('-t', '--train', action='store_true',
+                    help='train the agent')
 parser.add_argument('-l', '--load', type=str, default=None,
                     help='load the neural network weights from the given path')
 parser.add_argument('-v', '--video', action='store_true',
                     help='show video output')
 parser.add_argument('-d', '--debug', action='store_true',
                     help='run in debug mode (no output files)')
-parser.add_argument('-t', '--train', action='store_true',
-                    help='train the agent')
 parser.add_argument('--eval', action='store_true',
                     help='evaluate the agent')
 parser.add_argument('-e', '--environment', type=str,
@@ -37,7 +37,7 @@ parser.add_argument('-e', '--environment', type=str,
 parser.add_argument('--double', action='store_true',
                     help='use DDQN instead of DQN')
 parser.add_argument('--minibatch-size', type=int, default=32,
-                    help='number of transitions to train the DQN on')
+                    help='number of sample to train the DQN at each update')
 parser.add_argument('--replay-memory-size', type=int, default=1e6,
                     help='number of samples stored in the replay memory')
 parser.add_argument('--target-network-update-freq', type=int, default=10e3,
@@ -86,7 +86,7 @@ parser.add_argument('--test-freq', type=int, default=250000,
                          'agent\'s performance')
 parser.add_argument('--validation-frames', type=int, default=135000,
                     help='number of frames to test the model like in table 3 of'
-                         ' the DeepMind paper')
+                         ' the paper')
 parser.add_argument('--test-states', type=int, default=30,
                     help='number of states on which to compute the average Q '
                          'value')
@@ -239,4 +239,4 @@ if args.train:
         episode += 1
 
 if args.eval:
-    evaluate(DQA, args, logger)
+    logger.log(evaluate(DQA, args, logger))

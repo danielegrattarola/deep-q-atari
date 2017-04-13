@@ -1,12 +1,9 @@
 from __future__ import print_function
 import gym
-from builtins import range
-import time
 import numpy as np
-from joblib import Parallel, delayed
-from PIL import Image
+import time
 import utils
-from Logger import Logger
+from joblib import Parallel, delayed
 
 max_mean_score = 0
 
@@ -14,7 +11,7 @@ max_mean_score = 0
 def evaluate(DQA, args, logger):
     global max_mean_score
 
-    evaluation_csv = 'evaluation_info.csv'
+    evaluation_csv = 'evaluation.csv'
     logger.to_csv(evaluation_csv, 'length,score')
     env = gym.make(args.environment)
     scores = list()
@@ -22,11 +19,11 @@ def evaluate(DQA, args, logger):
 
     while frame_counter < args.validation_frames:
         remaining_random_actions = args.initial_random_actions
-        observation = utils.preprocess_observation(env.reset())
+        obs = utils.preprocess_observation(env.reset())
 
         frame_counter += 1
-        current_state = np.array(
-            [observation, observation, observation, observation])  # Initialize the first state with the same 4 images
+        # Initialize the first state with the same 4 images
+        current_state = np.array([obs, obs, obs, obs])
         t = 0
         episode = 0
         score = 0
@@ -34,16 +31,18 @@ def evaluate(DQA, args, logger):
         # Start episode
         while True:
             # Render the game if video output is not suppressed
-            if not args.novideo:
+            if args.video:
                 env.render()
 
-            action = DQA.get_action(np.asarray([current_state]), testing=True,
+            action = DQA.get_action(np.asarray([current_state]),
+                                    testing=True,
                                     force_random=remaining_random_actions > 0)
-            observation, reward, done, info = env.step(action)
-            observation = utils.preprocess_observation(observation)
-            current_state = utils.get_next_state(current_state, observation)
+            obs, reward, done, info = env.step(action)
+            obs = utils.preprocess_observation(obs)
+            current_state = utils.get_next_state(current_state, obs)
 
-            remaining_random_actions -= 1 if remaining_random_actions > 0 else 0
+            if remaining_random_actions > 0:
+                remaining_random_actions -= 1
 
             score += reward
             t += 1
@@ -52,15 +51,18 @@ def evaluate(DQA, args, logger):
             # End episode
             if done or t > args.max_episode_length:
                 episode += 1
-                print('Episode %d end\n---------------\nFrame counter: %d\n' % (episode, frame_counter))
+                print('Episode %d end\n---------------\nFrame counter: %d\n' % 
+                      (episode, frame_counter))
                 print('Length: %d\n, Score: %f\n\n' % (t, score))
-                logger.to_csv(evaluation_csv, [t, score])  # Save episode data in the evaluation csv
+                # Save episode data in the evaluation csv
+                logger.to_csv(evaluation_csv, [t, score])
                 break
-
+                
         scores.append([t, score])
 
     scores = np.asarray(scores)
-    max_idx = np.random.choice(np.argwhere(scores[:, 1] == np.max(scores[:, 1])).ravel())
+    max_indices = np.argwhere(scores[:, 1] == np.max(scores[:, 1])).ravel()
+    max_idx = np.random.choice(max_indices)
 
     # Save best model
     if max_mean_score < np.mean(scores):
@@ -70,50 +72,51 @@ def evaluate(DQA, args, logger):
     return scores[max_idx, :].ravel()
 
 
-def _eval_and_render(mdp, policy, nbEpisodes=1, metric='discounted',
-                     initialState=None, render=True):
+def _eval_and_render(mdp, policy, n_episodes=1, metric='discounted',
+                     initial_state=None, render=True):
     """
     This function evaluate a policy on the specified metric by executing
     multiple episode and visualize its performance
     Params:
-        policy (object): a policy object (method drawAction is expected)
-        nbEpisodes (int): the number of episodes to execute
+        policy (object): a policy object (method get_action is expected)
+        n_episodes (int): the number of episodes to execute
         metric (string): the evaluation metric ['discounted', 'average']
     Return:
         metric (float): the selected evaluation metric
         confidence (float): 95% confidence level for the provided metric
         step (float): average number of step before finish
-        stepConfidence (float):  95% confidence level for step average
+        step_confidence (float):  95% confidence level for step average
     """
-    values, steps = _eval_and_render_vectorial(mdp, policy, nbEpisodes, metric, initialState, render)
+    values, steps = _eval_and_render_vectorial(mdp, policy, n_episodes, metric, 
+                                               initial_state, render)
 
-    return values.mean(), 2 * values.std() / np.sqrt(nbEpisodes), \
-           steps.mean(), 2 * steps.std() / np.sqrt(nbEpisodes)
+    return values.mean(), 2 * values.std() / np.sqrt(n_episodes), \
+           steps.mean(), 2 * steps.std() / np.sqrt(n_episodes)
 
 
-def _eval_and_render_vectorial(mdp, policy, nbEpisodes=1, metric='discounted',
-                               initialState=None, render=True):
+def _eval_and_render_vectorial(mdp, policy, n_episodes=1, metric='discounted',
+                               initial_state=None, render=True):
     """
     This function evaluate a policy on the specified metric by executing
     multiple episode and visualize its performance
     Params:
-        policy (object): a policy object (method drawAction is expected)
-        nbEpisodes (int): the number of episodes to execute
+        policy (object): a policy object (method get_action is expected)
+        n_episodes (int): the number of episodes to execute
         metric (string): the evaluation metric ['discounted', 'average']
     Return:
         metric (float): the selected evaluation metric
         confidence (float): 95% confidence level for the provided metric
         step (float): average number of step before finish
-        stepConfidence (float):  95% confidence level for step average
+        step_confidence (float):  95% confidence level for step average
     """
     fps = mdp.metadata.get('video.frames_per_second') or 100
-    values = np.zeros(nbEpisodes)
-    steps = np.zeros(nbEpisodes)
+    values = np.zeros(n_episodes)
+    steps = np.zeros(n_episodes)
     gamma = mdp.gamma
     if metric == 'average':
         gamma = 1
-    for e in range(nbEpisodes):
-        epPerformance = 0.0
+    for e in range(n_episodes):
+        ep_performance = 0.0
         df = 1
         t = 0
         H = np.inf
@@ -123,14 +126,14 @@ def _eval_and_render_vectorial(mdp, policy, nbEpisodes=1, metric='discounted',
         if hasattr(mdp, 'horizon'):
             H = mdp.horizon
         mdp.reset_agent()
-        state = mdp._reset(initialState)
+        state = mdp._reset(initial_state)
         while (t < H) and (not done):
             if policy:
                 action = policy.get_action(state)
             else:
                 action = mdp.action_space.sample()
             state, r, done, _ = mdp.step(action)
-            epPerformance += df * r
+            ep_performance += df * r
             df *= gamma
             t += 1
 
@@ -140,58 +143,59 @@ def _eval_and_render_vectorial(mdp, policy, nbEpisodes=1, metric='discounted',
         # if(t>= H):
         #    print("Horizon!!")
         if gamma == 1:
-            epPerformance /= t
-        print("\tperformance", epPerformance)
-        values[e] = epPerformance
+            ep_performance /= t
+        print("\tperformance", ep_performance)
+        values[e] = ep_performance
         steps[e] = t
 
     return values, steps
 
 
-def _parallel_eval(mdp, policy, nbEpisodes, metric, initialState, n_jobs, nEpisodesPerJob):
-    # TODO using joblib
-    # return _eval_and_render(mdp, policy, nbEpisodes, metric,
-    #                         initialState, False)
-    how_many = int(round(nbEpisodes / nEpisodesPerJob))
-    out = Parallel(
-        n_jobs=n_jobs, verbose=2,
-    )(
-        delayed(_eval_and_render)(gym.make(mdp.spec.id), policy, nEpisodesPerJob, metric, initialState)
+def _parallel_eval(mdp, policy, n_episodes, metric, initial_state, n_jobs, 
+                   n_episodes_per_job):
+    # return _eval_and_render(mdp, policy, n_episodes, metric,
+    #                         initial_state, False)
+    how_many = int(round(n_episodes / n_episodes_per_job))
+    out = Parallel(n_jobs=n_jobs, verbose=2)(
+        delayed(_eval_and_render)(gym.make(mdp.spec.id), policy,
+                                  n_episodes_per_job, metric, initial_state)
         for _ in range(how_many))
 
-    # out is a list of quadruplet: mean J, 95% conf lev J, mean steps, 95% conf lev steps
-    # (confidence level should be 0 or NaN)
+    # Out is a list of quadruplet: mean J, 95% conf lev J, mean steps, 
+    # 95% conf lev steps (confidence level should be 0 or NaN)
     values, steps = np.array(out)
-    return values.mean(), 2 * values.std() / np.sqrt(nbEpisodes), \
-           steps.mean(), 2 * steps.std() / np.sqrt(nbEpisodes)
+    return values.mean(), 2 * values.std() / np.sqrt(n_episodes),\
+           steps.mean(), 2 * steps.std() / np.sqrt(n_episodes)
 
 
-def evaluate_policy(mdp, policy, nbEpisodes=1,
-                    metric='discounted', initialState=None, render=False,
-                    n_jobs=-1, nEpisodesPerJob=10):
+def evaluate_policy(mdp, policy, n_episodes=1,
+                    metric='discounted', initial_state=None, render=False,
+                    n_jobs=-1, n_episodes_per_job=10):
     """
     This function evaluate a policy on the given environment w.r.t.
     the specified metric by executing multiple episode.
     Params:
         policy (object): a policy object (method drawAction is expected)
-        nbEpisodes (int): the number of episodes to execute
+        n_episodes (int): the number of episodes to execute
         metric (string): the evaluation metric ['discounted', 'average']
-        initialState (np.array, None): initial state where to start the episode.
-                                If None the initial state is selected by the mdp.
+        initial_state (np.array, None): initial state where to start the episode.
+            If None the initial state is selected by the mdp.
         render (bool): flag indicating whether to visualize the behavior of
-                        the policy
+            the policy
     Return:
         metric (float): the selected evaluation metric
         confidence (float): 95% confidence level for the provided metric
     """
-    assert metric in ['discounted', 'average'], "unsupported metric for evaluation"
+    assert metric in ['discounted', 'average'], "Unsupported metric"
     if render:
-        return _eval_and_render(mdp, policy, nbEpisodes, metric, initialState, True)
+        return _eval_and_render(mdp, policy, n_episodes, metric, initial_state,
+                                True)
     else:
-        return _parallel_eval(mdp, policy, nbEpisodes, metric, initialState, n_jobs, nEpisodesPerJob)
+        return _parallel_eval(mdp, policy, n_episodes, metric, initial_state,
+                              n_jobs, n_episodes_per_job)
 
 
-def collectEpisode(mdp, policy=None):
+def collect_episode(mdp, policy=None):
     """
     This function can be used to collect a dataset running an episode
     from the environment using a given policy.
@@ -224,8 +228,7 @@ def collectEpisode(mdp, policy=None):
             action = mdp.action_space.sample()
         nextState, reward, done, _ = mdp.step(action)
 
-        # TODO: should look the dimension of the action
-        action = np.reshape(action, (1))
+        action = np.reshape(action, 1)
 
         if not done:
             if t < H:
@@ -250,14 +253,11 @@ def collectEpisode(mdp, policy=None):
     return data
 
 
-def collectEpisodes(mdp, policy=None, nbEpisodes=100, n_jobs=-1):
-    out = Parallel(
-        n_jobs=n_jobs, verbose=2,
-    )(
-        delayed(collectEpisode)(gym.make(mdp.spec.id), policy)
-        for _ in range(nbEpisodes))
+def collect_episodes(mdp, policy=None, n_episodes=100, n_jobs=-1):
+    out = Parallel(n_jobs=n_jobs, verbose=2)(
+        delayed(collect_episode)(gym.make(mdp.spec.id), policy) 
+        for _ in range(n_episodes))
 
-    # out is a list of np.array, each one representing an episode
-    # merge the results
-    data = np.concatenate(out, axis=0)
+    # Output is a list of np.array, each one representing an episode
+    data = np.concatenate(out, axis=0)  # Merge the results
     return data

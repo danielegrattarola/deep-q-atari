@@ -1,7 +1,7 @@
-from keras.models import Sequential
-from keras.layers import *
-from keras.optimizers import *
 import numpy as np
+from keras.models import Sequential
+from keras.layers import Convolution2D, Activation, Flatten, Dense
+from keras.optimizers import *
 
 
 class DQNetwork:
@@ -56,10 +56,13 @@ class DQNetwork:
         self.model.add(Dense(self.actions))
 
         # Optimization algorithm
-        self.optimizer = RMSpropGraves(lr=self.learning_rate,
-                                       momentum=self.momentum,
-                                       squared_momentum=self.squared_momentum,
-                                       epsilon=self.min_squared_gradient)
+        try:
+            self.optimizer = RMSpropGraves(lr=self.learning_rate,
+                                           momentum=self.momentum,
+                                           squared_momentum=self.squared_momentum,
+                                           epsilon=self.min_squared_gradient)
+        except NameError:
+            self.optimizer = RMSprop()
 
         # Load the network weights from saved model
         if load_path is not None:
