@@ -5,7 +5,7 @@ The project was conducted with the machine learning research team of Politecnico
 Rather than a pre-packaged tool to simply see the agent playing the game, this is a model that needs to be trained and fine tuned by hand and has more of an educational value.  
 This work is closely inspired by [the original DeepMind paper](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf) by Mnih et al. on deep Q-learning, and the variations are mostly focused on the Q-newtork architecture in order to analyse the difference in performance.  
   
-A similar work on deep Q-learning applied to videogames can be found on [my Gitlab page](https://gitlab.com/danielegrattarola/deep-q-snake).  
+A similar work on deep Q-learning applied to videogames can be found on [my Github page](https://github.com/danielegrattarola/deep-q-snake).  
 
 ### Installation
 To run the script you'll need [Keras](http://keras.io/#installation) and [OpenAI Gym](https://gym.openai.com/) installed on your system.  
@@ -31,7 +31,7 @@ python atari.py -h
 you'll see the options list. Possible options are:  
 `-t, train`: train the agent;  
 `-l, --load`: load the neural network weights from the given path;  
-`-v, --novideo`: suppress video output (useful to train on headless servers);  
+`-v, --video`: show video output;  
 `-d, --debug`: run in debug mode (no output files);  
 `-e, --environment`: name of the OpenAI Gym environment to use (default: MsPacman-v0);  
 `--double`: use DDQN instead of DQN;  
@@ -62,7 +62,7 @@ you'll see the options list. Possible options are:
 The possible environments on which the agent can be trained are all the environments in the Atari gym package, which include: MsPacman-v0, BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, Qbert-v0, Seaquest-v0, SpaceInvaders-v0, etc..  
 A typical usage of this script on an headless server (e.g. EC2 instance) would look like this:
 ```sh
-python atari.py -t -v -e Breakout-v0 
+python atari.py -t -e Breakout-v0 
 ```  
   
 ### Output
@@ -70,9 +70,9 @@ Running the script with any combination of options (except `-d`) will output som
 You'll find the pertinent csv files in the output folder of the run (output/runYYYMMDD-hhmmss) which will contain raw data for the analysis of the agent's performance.  
   
 More specifically, the following files will be output:  
-1. **test_info.csv**: will contain the episode length and cumulative (non-clipped) reward of each test episode;  
-2. **training_info.csv**: will contain the episode length and cumulative (non-clipped) reward of each training episode;  
+1. **training_info.csv**: will contain the episode length and cumulative (non-clipped) reward of each training episode;    
+2. **evaluation_info.csv**: will contain the episode length and cumulative (non-clipped) reward of each test episode;  
 3. **training_history.csv**: will contain the average loss and accuracy for each training session, as output by the `fit` method of Keras;  
-4. **average_values_training.csv**: will contain the average reward and Q-value (computed over a held out set of random states, whose number is set by the `--test-states` flag) over a period of N DQN updates (where N is set by the `--avg-val-computation-freq` flag);  
+4. **test_score_mean_q_info.csv**: will contain the average score and Q-value (computed over a held out set of random states set by the `--test-states` flag) over a period of N DQN updates (where N is set by the `--avg-val-computation-freq` flag);  
 5. **log.txt**: a logfile with various information about the parameters of the run and the progress of the model;  
-6. **model_DQN.h5, model_DQN_target.h5**: files containing the latest weights of the DQN and target DQN (both files will be saved when the script quits or is killed with `ctrl+c`). Pass any of these as argument to the `--load` flag to initialize a new DQN with these weights (Note: the DQN architecture must be the same for this to work);  
+6. **model_DQN.h5, model_DQN_target.h5**: files containing the weights of the DQN and target DQN (both files will be saved when the script quits or is killed with `ctrl+c`). Pass any of these as argument to the `--load` flag to initialize a new DQN with these weights (Note: the DQN architecture must be the same for this to work);  

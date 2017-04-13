@@ -5,7 +5,6 @@ import time
 import numpy as np
 from joblib import Parallel, delayed
 from PIL import Image
-
 import utils
 from Logger import Logger
 
