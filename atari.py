@@ -107,25 +107,23 @@ test_states = []
 
 # Setup
 env = gym.make(args.environment)
-network_input_shape = (4, 110, 84)  # Dimension ordering: 'th'
-DQA = DQAgent(
-    env.action_space.n,
-    network_input_shape,
-    replay_memory_size=args.replay_memory_size,
-    minibatch_size=args.minibatch_size,
-    learning_rate=args.learning_rate,
-    momentum=args.momentum,
-    squared_momentum=args.squared_momentum,
-    min_squared_gradient=args.min_squared_gradient,
-    discount_factor=args.discount_factor,
-    dropout_prob=args.dropout,
-    epsilon=args.epsilon,
-    epsilon_decrease_rate=args.epsilon_decrease,
-    min_epsilon=args.min_epsilon,
-    load_path=args.load,
-    logger=logger,
-    args=args
-)
+network_input_shape = (4, 110, 84)  # Dimension ordering: 'th' (channels first)
+DQA = DQAgent(env.action_space.n,
+              network_input_shape,
+              replay_memory_size=args.replay_memory_size,
+              minibatch_size=args.minibatch_size,
+              learning_rate=args.learning_rate,
+              momentum=args.momentum,
+              squared_momentum=args.squared_momentum,
+              min_squared_gradient=args.min_squared_gradient,
+              discount_factor=args.discount_factor,
+              dropout_prob=args.dropout,
+              epsilon=args.epsilon,
+              epsilon_decrease_rate=args.epsilon_decrease,
+              min_epsilon=args.min_epsilon,
+              load_path=args.load,
+              logger=logger,
+              args=args)
 
 # Initial logging
 logger.log({
@@ -157,12 +155,13 @@ if args.train:
 
         # Observe reward and initialize first state
         obs = utils.preprocess_observation(env.reset())
+
         # Initialize the first state with the same 4 images
         current_state = np.array([obs, obs, obs, obs])
 
+        # Main episode loop
         t = 0
         frame_counter += 1
-        # Main episode loop
         while t < args.max_episode_length:
             # Stop the episode if it takes too long
             if frame_counter > args.max_frames_number:

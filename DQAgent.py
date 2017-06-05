@@ -82,12 +82,12 @@ class DQAgent:
     def get_action(self, state, testing=False, force_random=False):
         """
         Polls DQN for Q-values. Returns argmax(Q) with probability 1-epsilon
-        during training, 0.05 during testing.
+        during training, 0.95 during testing.
         :param state: a state that can be passed as input to DQN
         :param testing: whether to use the current epsilon or the constant 0.05
         :param force_random: whether to sample a random action regardless of
             parameters
-        :return:
+        :return: the index of (action associated to) the highest Q-value 
         """
         is_random = (random() < (self.epsilon if not testing else 0.05))
         if force_random or is_random:
@@ -98,10 +98,10 @@ class DQAgent:
 
     def get_max_q(self, state):
         """
-        Returns the maximum Q value predicted on the given state
+        Returns the maximum Q value predicted on the given state.
         :param state: a state that can be passed as input to DQN
-        :return: an action index corresponding to the maximum Q in the given
-            state
+        :return: an action index corresponding to the maximum Q-value in the 
+            given state
         """
         q_values = self.DQN.predict(state)
         idxs = np.argwhere(q_values == np.max(q_values)).ravel()
@@ -109,7 +109,7 @@ class DQAgent:
 
     def get_random_state(self):
         """
-        Samples a random state from the replay memory .
+        Samples a random state from the replay memory.
         :return: the sampled state
         """
         return self.experiences[randrange(0, len(self.experiences))]['source']
@@ -140,7 +140,7 @@ class DQAgent:
     def sample_batch(self):
         """
         Samples self.minibatch_size random transitions from the replay memory
-        and returns them as a batch
+        and returns them as a batch.
         :return: a batch of SARS' tuples
         """
         batch = []
@@ -150,7 +150,7 @@ class DQAgent:
 
     def train(self):
         """
-        Trains the DQN on a batch of transitions.
+        Trains the DQN on a minibatch of transitions.
         """
         self.training_count += 1
         print 'Training session #%d - epsilon: %f' % \
@@ -160,7 +160,7 @@ class DQAgent:
 
     def update_epsilon(self):
         """
-        Decreases the probability of picking a random action to improve
+        Decreases the probability of picking a random action, to improve
         exploitation.
         """
         if self.epsilon - self.epsilon_decrease_rate > self.min_epsilon:

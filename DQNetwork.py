@@ -22,11 +22,12 @@ class DQNetwork:
         self.logger = logger
         self.args = args
         self.training_history_csv = 'training_history.csv'
+
         if self.logger is not None:
             self.logger.to_csv(self.training_history_csv, 'Loss,Accuracy')
 
         # Deep Q Network as defined in the DeepMind article on Nature
-        # Ordering th: (samples, channels, rows, cols)
+        # Ordering th/channels first: (samples, channels, rows, cols)
         self.model = Sequential()
 
         # First convolutional layer
@@ -89,10 +90,11 @@ class DQNetwork:
             x_train.append(datapoint['source'].astype(np.float64))
 
             # Apply the DQN or DDQN Q-value selection
-            next_state_pred = DQN_target.predict(datapoint['dest'].astype(np.float64)).ravel()
+            next_state = datapoint['dest'].astype(np.float64)
+            next_state_pred = DQN_target.predict(next_state).ravel()
             if self.args.double:
                 # TODO I'm not sure this is right
-                ddqn_model_pred = self.model.predict(datapoint['dest'].astype(np.float64)).ravel()
+                ddqn_model_pred = self.model.predict(next_state).ravel()
                 next_q_value = np.max(ddqn_model_pred)
             else:
                 next_q_value = np.max(next_state_pred)
@@ -123,7 +125,7 @@ class DQNetwork:
 
     def predict(self, state):
         """
-        Feeds state into the model, returns predicted Q-values.
+        Feeds state to the model, returns predicted Q-values.
         :param state: a numpy.array with same shape as the network's input
         :return: numpy.array with predicted Q-values
         """

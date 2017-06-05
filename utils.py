@@ -15,5 +15,6 @@ def preprocess_observation(obs):
 
 
 def get_next_state(current, obs):
-    # Next state is composed by the last 3 images of the previous state and the new observation
+    # Next state is composed by the last 3 images of the previous state and the
+    # new observation
     return np.append(current[1:], [obs], axis=0)
