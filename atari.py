@@ -30,12 +30,8 @@ parser.add_argument('--eval', action='store_true',
                     help='evaluate the agent')
 parser.add_argument('-e', '--environment', type=str,
                     help='name of the OpenAI Gym environment to use '
-                         '(default: MsPacman-v0) \nDeepMind paper: MsPacman-v0,'
-                         ' BeamRider-v0, Breakout-v0, Enduro-v0, Pong-v0, '
-                         'Qbert-v0, Seaquest-v0, SpaceInvaders-v0',
-                    default='MsPacman-v0')
-parser.add_argument('--double', action='store_true',
-                    help='use DDQN instead of DQN')
+                         '(default: MsPacmanDeterministic-v4)',
+                    default='MsPacmanDeterministic-v4')
 parser.add_argument('--minibatch-size', type=int, default=32,
                     help='number of sample to train the DQN at each update')
 parser.add_argument('--replay-memory-size', type=int, default=1e6,
@@ -52,13 +48,7 @@ parser.add_argument('--update-freq', type=int, default=4,
                     help='frequency (number of steps) with which to train the '
                          'DQN')
 parser.add_argument('--learning-rate', type=float, default=0.00025,
-                    help='learning rate for RMSprop')
-parser.add_argument('--momentum', type=float, default=0.95,
-                    help='momentum for RMSprop')
-parser.add_argument('--squared-momentum', type=float, default=0.95,
-                    help='squared momentum for RMSprop')
-parser.add_argument('--min-squared-gradient', type=float, default=0.01,
-                    help='constant added to the denominator of RMSprop update')
+                    help='learning rate for optimizer')
 parser.add_argument('--epsilon', type=float, default=1,
                     help='initial exploration rate for the agent')
 parser.add_argument('--min-epsilon', type=float, default=0.1,
@@ -113,17 +103,13 @@ DQA = DQAgent(env.action_space.n,
               replay_memory_size=args.replay_memory_size,
               minibatch_size=args.minibatch_size,
               learning_rate=args.learning_rate,
-              momentum=args.momentum,
-              squared_momentum=args.squared_momentum,
-              min_squared_gradient=args.min_squared_gradient,
               discount_factor=args.discount_factor,
               dropout_prob=args.dropout,
               epsilon=args.epsilon,
               epsilon_decrease_rate=args.epsilon_decrease,
               min_epsilon=args.min_epsilon,
               load_path=args.load,
-              logger=logger,
-              args=args)
+              logger=logger)
 
 # Initial logging
 logger.log({
@@ -142,10 +128,6 @@ logger.to_csv(test_csv, 'avg_score,avg_Q')
 episode = 0
 frame_counter = 0
 
-# TODO: now the loaded model can only be used for evaluation. Make it possible
-#       to train it after loading. Be careful to restore not only the model,
-#       but also the experience replay memory, the epsilon, the optimizer
-#       learning rate and so on.
 if args.train:
     # Main loop
     while episode < args.max_episodes:

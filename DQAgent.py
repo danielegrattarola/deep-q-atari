@@ -10,25 +10,18 @@ class DQAgent:
                  replay_memory_size=1024,
                  minibatch_size=32,
                  learning_rate=0.00025,
-                 momentum=0.95,
-                 squared_momentum=0.95,
-                 min_squared_gradient=0.01,
                  discount_factor=0.9,
                  dropout_prob=0.1,
                  epsilon=1,
                  epsilon_decrease_rate=0.99,
                  min_epsilon=0.1,
                  load_path=None,
-                 logger=None,
-                 args=None):
+                 logger=None):
 
         # Parameters
         self.network_input_shape = network_input_shape  # Shape of the DQN input
         self.actions = actions  # Size of the discrete action space
         self.learning_rate = learning_rate  # Learning rate for the DQN
-        self.momentum = momentum  # Momentum for RMSProp
-        self.squared_momentum = squared_momentum  # Squared momentum for RMSProp
-        self.min_squared_gradient = min_squared_gradient  # MSG for RMSProp
         self.dropout_prob = dropout_prob  # Dropout probability of the DQN
         self.load_path = load_path  # Path from which to load the DQN's weights
         self.replay_memory_size = replay_memory_size  # Size of replay memory
@@ -38,7 +31,6 @@ class DQAgent:
         self.epsilon_decrease_rate = epsilon_decrease_rate  # See update_epsilon
         self.min_epsilon = min_epsilon  # Minimum value for epsilon
         self.logger = logger
-        self.args = args
 
         # Replay memory
         self.experiences = []
@@ -50,15 +42,11 @@ class DQAgent:
             self.actions,
             self.network_input_shape,
             learning_rate=self.learning_rate,
-            momentum=self.momentum,
-            squared_momentum=self.squared_momentum,
-            min_squared_gradient=self.min_squared_gradient,
             discount_factor=self.discount_factor,
             minibatch_size=self.minibatch_size,
             dropout_prob=self.dropout_prob,
             load_path=self.load_path,
-            logger=self.logger,
-            args=self.args
+            logger=self.logger
         )
 
         # Target DQN used to generate targets
@@ -66,15 +54,11 @@ class DQAgent:
             self.actions,
             self.network_input_shape,
             learning_rate=self.learning_rate,
-            momentum=self.momentum,
-            squared_momentum=self.squared_momentum,
-            min_squared_gradient=self.min_squared_gradient,
             discount_factor=self.discount_factor,
             minibatch_size=self.minibatch_size,
             dropout_prob=self.dropout_prob,
             load_path=self.load_path,
-            logger=self.logger,
-            args=self.args
+            logger=self.logger
         )
         # Reset target DQN
         self.DQN_target.model.set_weights(self.DQN.model.get_weights())

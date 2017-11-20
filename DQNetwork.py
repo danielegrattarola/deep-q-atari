@@ -1,76 +1,69 @@
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Convolution2D, Activation, Flatten, Dense
-from keras.optimizers import *
+from keras.layers import Conv2D, Flatten, Dense
 
 
 class DQNetwork:
-    def __init__(self, actions, input_shape, minibatch_size=32,
-                 learning_rate=0.00025, momentum=0.95, squared_momentum=0.95,
-                 min_squared_gradient=0.01, discount_factor=0.99,
-                 dropout_prob=0.1, load_path=None, logger=None, args=None):
+    def __init__(self, actions, input_shape,
+                 minibatch_size=32,
+                 learning_rate=0.00025,
+                 discount_factor=0.99,
+                 dropout_prob=0.1,
+                 load_path=None,
+                 logger=None):
 
         # Parameters
         self.actions = actions  # Size of the network output
         self.discount_factor = discount_factor  # Discount factor of the MDP
         self.minibatch_size = minibatch_size  # Size of the training batches
         self.learning_rate = learning_rate  # Learning rate
-        self.momentum = momentum  # Momentum for RMSProp
-        self.squared_momentum = squared_momentum  # Squared momentum for RMSProp
-        self.min_squared_gradient = min_squared_gradient  # MSG for RMSProp
         self.dropout_prob = dropout_prob  # Probability of dropout
         self.logger = logger
-        self.args = args
         self.training_history_csv = 'training_history.csv'
 
         if self.logger is not None:
             self.logger.to_csv(self.training_history_csv, 'Loss,Accuracy')
 
         # Deep Q Network as defined in the DeepMind article on Nature
-        # Ordering th/channels first: (samples, channels, rows, cols)
+        # Ordering channels first: (samples, channels, rows, cols)
         self.model = Sequential()
 
         # First convolutional layer
-        self.model.add(Convolution2D(32, 8, 8, border_mode='valid',
-                                     subsample=(4, 4), input_shape=input_shape,
-                                     dim_ordering='th'))
-        self.model.add(Activation('relu'))
+        self.model.add(Conv2D(32, 8, strides=(4, 4),
+                              padding='valid',
+                              activation='relu',
+                              input_shape=input_shape,
+                              data_format='channels_first'))
 
         # Second convolutional layer
-        self.model.add(Convolution2D(64, 4, 4, border_mode='valid',
-                                     subsample=(2, 2), dim_ordering='th'))
-        self.model.add(Activation('relu'))
+        self.model.add(Conv2D(64, 4, strides=(2, 2),
+                              padding='valid',
+                              activation='relu',
+                              input_shape=input_shape,
+                              data_format='channels_first'))
 
         # Third convolutional layer
-        self.model.add(Convolution2D(64, 3, 3, border_mode='valid',
-                                     subsample=(1, 1), dim_ordering='th'))
-        self.model.add(Activation('relu'))
+        self.model.add(Conv2D(64, 3, strides=(1, 1),
+                              padding='valid',
+                              activation='relu',
+                              input_shape=input_shape,
+                              data_format='channels_first'))
 
         # Flatten the convolution output
         self.model.add(Flatten())
 
         # First dense layer
-        self.model.add(Dense(512))
-        self.model.add(Activation('relu'))
+        self.model.add(Dense(512, activation='relu'))
 
         # Output layer
         self.model.add(Dense(self.actions))
-
-        # Optimization algorithm
-        try:
-            self.optimizer = RMSpropGraves(lr=self.learning_rate,
-                                           momentum=self.momentum,
-                                           squared_momentum=self.squared_momentum,
-                                           epsilon=self.min_squared_gradient)
-        except NameError:
-            self.optimizer = RMSprop()
 
         # Load the network weights from saved model
         if load_path is not None:
             self.load(load_path)
 
         self.model.compile(loss='mean_squared_error',
-                           optimizer=self.optimizer,
+                           optimizer='rmsprop',
                            metrics=['accuracy'])
 
     def train(self, batch, DQN_target):
@@ -92,12 +85,7 @@ class DQNetwork:
             # Apply the DQN or DDQN Q-value selection
             next_state = datapoint['dest'].astype(np.float64)
             next_state_pred = DQN_target.predict(next_state).ravel()
-            if self.args.double:
-                # TODO I'm not sure this is right
-                ddqn_model_pred = self.model.predict(next_state).ravel()
-                next_q_value = np.max(ddqn_model_pred)
-            else:
-                next_q_value = np.max(next_state_pred)
+            next_q_value = np.max(next_state_pred)
 
             # The error must be 0 on all actions except the one taken
             t = list(self.predict(datapoint['source'])[0])
